@@ -21,7 +21,7 @@ public class AppDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Title).IsRequired().HasMaxLength(255);
-            entity.Property(e => e.Description).IsRequired();
+            entity.Property(e => e.Description).HasMaxLength(2000);
             entity.Property(e => e.Status).IsRequired();
             entity.Property(e => e.Priority).IsRequired();
             entity.Property(e => e.CreatedAt).IsRequired();

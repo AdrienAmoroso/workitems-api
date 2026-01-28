@@ -2,7 +2,7 @@ namespace DotnetPortfolioApi.Api.Domain;
 
 public class User
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; } = Guid.NewGuid();
     
     public string Username { get; set; } = null!;
     
@@ -14,3 +14,4 @@ public class User
     
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }
+

@@ -2,13 +2,13 @@ namespace DotnetPortfolioApi.Api.Domain;
 
 public class WorkItem
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; } = Guid.NewGuid();
     
     public string Title { get; set; } = null!;
     
-    public string Description { get; set; } = null!;
+    public string? Description { get; set; }
     
-    public WorkItemStatus Status { get; set; } = WorkItemStatus.Open;
+    public WorkItemStatus Status { get; set; } = WorkItemStatus.Todo;
     
     public WorkItemPriority Priority { get; set; } = WorkItemPriority.Medium;
     
@@ -19,16 +19,14 @@ public class WorkItem
 
 public enum WorkItemStatus
 {
-    Open,
+    Todo,
     InProgress,
-    Completed,
-    Closed
+    Done
 }
 
 public enum WorkItemPriority
 {
     Low,
     Medium,
-    High,
-    Critical
+    High
 }
