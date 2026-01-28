@@ -113,7 +113,7 @@ public class AuthIntegrationTests : IClassFixture<WebApplicationFactory<Program>
 
         var secondRequest = new RegisterRequest
         {
-            Username = username, // Same username
+            Username = username,
             Email = "second@example.com",
             Password = "Password123!"
         };
@@ -143,7 +143,7 @@ public class AuthIntegrationTests : IClassFixture<WebApplicationFactory<Program>
         var secondRequest = new RegisterRequest
         {
             Username = "user2",
-            Email = email, // Same email
+            Email = email,
             Password = "Password123!"
         };
 

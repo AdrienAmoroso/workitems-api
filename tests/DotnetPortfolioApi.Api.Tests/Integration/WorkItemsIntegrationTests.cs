@@ -97,7 +97,6 @@ public class WorkItemsIntegrationTests : IClassFixture<WebApplicationFactory<Pro
         var token = await RegisterAndGetTokenAsync(client);
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        // Create a work item first
         var createRequest = new CreateWorkItemRequest
         {
             Title = "Test Item",
@@ -188,7 +187,6 @@ public class WorkItemsIntegrationTests : IClassFixture<WebApplicationFactory<Pro
         var token = await RegisterAndGetTokenAsync(client);
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        // Create a work item first
         var createRequest = new CreateWorkItemRequest
         {
             Title = "Original Title",
@@ -251,7 +249,6 @@ public class WorkItemsIntegrationTests : IClassFixture<WebApplicationFactory<Pro
         var token = await RegisterAndGetTokenAsync(client);
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        // Create a work item first
         var createRequest = new CreateWorkItemRequest
         {
             Title = "To Delete",
