@@ -488,4 +488,4 @@ TEST_COMMANDS.md
 JWT_IMPLEMENTATION_SUMMARY.md
 JWT_TEST_GUIDE.md
 TESTS_STATUS.md
-.github/
+.github/copilot-instructions.md
