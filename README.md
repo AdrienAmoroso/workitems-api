@@ -1,6 +1,6 @@
 # DotNet Portfolio API
 
-![CI](https://github.com/AdrienAmoroso/dotnet-portfolio-api/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/AdrienAmoroso/dotnet-portfolio-api/actions)
 ![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
