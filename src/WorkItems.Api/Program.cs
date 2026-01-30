@@ -15,10 +15,11 @@ if (!builder.Environment.EnvironmentName.Equals("Test", StringComparison.Ordinal
     
     if (builder.Environment.IsProduction() && !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DATABASE_URL")))
     {
-        // Use PostgreSQL in production (Render provides DATABASE_URL)
+        // Use PostgreSQL in production (Render provides DATABASE_URL in URI format)
         var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL")!;
+        var npgsqlConnectionString = ConvertPostgresUrlToConnectionString(databaseUrl);
         builder.Services.AddDbContext<AppDbContext>(options =>
-            options.UseNpgsql(databaseUrl));
+            options.UseNpgsql(npgsqlConnectionString));
     }
     else
     {
@@ -26,6 +27,20 @@ if (!builder.Environment.EnvironmentName.Equals("Test", StringComparison.Ordinal
         builder.Services.AddDbContext<AppDbContext>(options =>
             options.UseSqlite(connectionString));
     }
+}
+
+// Helper function to convert Render's DATABASE_URL to Npgsql connection string
+static string ConvertPostgresUrlToConnectionString(string databaseUrl)
+{
+    var uri = new Uri(databaseUrl);
+    var userInfo = uri.UserInfo.Split(':');
+    var username = userInfo[0];
+    var password = userInfo.Length > 1 ? userInfo[1] : "";
+    var host = uri.Host;
+    var port = uri.Port > 0 ? uri.Port : 5432;
+    var database = uri.AbsolutePath.TrimStart('/');
+    
+    return $"Host={host};Port={port};Database={database};Username={username};Password={password};SSL Mode=Require;Trust Server Certificate=true";
 }
 
 builder.Services.AddScoped<IWorkItemService, WorkItemService>();
