@@ -7,6 +7,12 @@
 
 A full-stack **Work Items management system** (similar to Jira tickets) built with ASP.NET Core and Angular. This project demonstrates enterprise-level development practices including JWT authentication, clean architecture, and comprehensive testing.
 
+## Live Demo
+
+**Try the app:** [https://workitems-web.onrender.com](https://workitems-web.onrender.com)
+
+> Note: Free tier may take ~30 seconds to wake up on first request.
+
 ## What This Project Demonstrates
 
 **Backend**
@@ -134,8 +140,8 @@ dotnet test
 - [x] JWT Authentication
 - [x] Angular Frontend with Material UI
 - [x] GitHub Actions CI
+- [x] Render deployment (PostgreSQL)
 - [ ] Role-based authorization
-- [ ] Docker support
 - [ ] Health checks endpoint
 
 ## Author

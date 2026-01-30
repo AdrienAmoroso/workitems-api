@@ -4,6 +4,8 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using WorkItems.Api.Contracts.Auth;
 using WorkItems.Api.Contracts.WorkItems;
 using WorkItems.Api.Data;
@@ -25,6 +27,12 @@ public class WorkItemsIntegrationTests : IClassFixture<WebApplicationFactory<Pro
     private const string TestSecretKey = "TestSecretKeyForJWTThatIsAtLeast32CharactersLong123456";
     private const string TestIssuer = "WorkItemsApi";
     private const string TestAudience = "WorkItemsApiUsers";
+    
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        Converters = { new JsonStringEnumConverter() }
+    };
 
     public WorkItemsIntegrationTests(WebApplicationFactory<Program> factory)
     {
@@ -84,7 +92,7 @@ public class WorkItemsIntegrationTests : IClassFixture<WebApplicationFactory<Pro
 
         // Assert
         response.EnsureSuccessStatusCode();
-        var result = await response.Content.ReadFromJsonAsync<PaginatedResult<WorkItemResponse>>();
+        var result = await response.Content.ReadFromJsonAsync<PaginatedResult<WorkItemResponse>>(JsonOptions);
         Assert.NotNull(result);
         Assert.NotNull(result.Items);
     }
@@ -105,14 +113,14 @@ public class WorkItemsIntegrationTests : IClassFixture<WebApplicationFactory<Pro
         };
 
         var createResponse = await client.PostAsJsonAsync("/api/work-items", createRequest);
-        var createdItem = await createResponse.Content.ReadFromJsonAsync<WorkItemResponse>();
+        var createdItem = await createResponse.Content.ReadFromJsonAsync<WorkItemResponse>(JsonOptions);
 
         // Act
         var response = await client.GetAsync($"/api/work-items/{createdItem!.Id}");
 
         // Assert
         response.EnsureSuccessStatusCode();
-        var result = await response.Content.ReadFromJsonAsync<WorkItemResponse>();
+        var result = await response.Content.ReadFromJsonAsync<WorkItemResponse>(JsonOptions);
         Assert.NotNull(result);
         Assert.Equal(createdItem.Id, result.Id);
         Assert.Equal(createRequest.Title, result.Title);
@@ -152,7 +160,7 @@ public class WorkItemsIntegrationTests : IClassFixture<WebApplicationFactory<Pro
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-        var result = await response.Content.ReadFromJsonAsync<WorkItemResponse>();
+        var result = await response.Content.ReadFromJsonAsync<WorkItemResponse>(JsonOptions);
         Assert.NotNull(result);
         Assert.Equal(request.Title, result.Title);
         Assert.Equal(request.Description, result.Description);
@@ -195,7 +203,7 @@ public class WorkItemsIntegrationTests : IClassFixture<WebApplicationFactory<Pro
         };
 
         var createResponse = await client.PostAsJsonAsync("/api/work-items", createRequest);
-        var createdItem = await createResponse.Content.ReadFromJsonAsync<WorkItemResponse>();
+        var createdItem = await createResponse.Content.ReadFromJsonAsync<WorkItemResponse>(JsonOptions);
 
         var updateRequest = new UpdateWorkItemRequest
         {
@@ -210,7 +218,7 @@ public class WorkItemsIntegrationTests : IClassFixture<WebApplicationFactory<Pro
 
         // Assert
         response.EnsureSuccessStatusCode();
-        var result = await response.Content.ReadFromJsonAsync<WorkItemResponse>();
+        var result = await response.Content.ReadFromJsonAsync<WorkItemResponse>(JsonOptions);
         Assert.NotNull(result);
         Assert.Equal(updateRequest.Title, result.Title);
         Assert.Equal(updateRequest.Description, result.Description);
@@ -257,7 +265,7 @@ public class WorkItemsIntegrationTests : IClassFixture<WebApplicationFactory<Pro
         };
 
         var createResponse = await client.PostAsJsonAsync("/api/work-items", createRequest);
-        var createdItem = await createResponse.Content.ReadFromJsonAsync<WorkItemResponse>();
+        var createdItem = await createResponse.Content.ReadFromJsonAsync<WorkItemResponse>(JsonOptions);
 
         // Act
         var response = await client.DeleteAsync($"/api/work-items/{createdItem!.Id}");
@@ -310,7 +318,7 @@ public class WorkItemsIntegrationTests : IClassFixture<WebApplicationFactory<Pro
 
         // Assert
         response.EnsureSuccessStatusCode();
-        var result = await response.Content.ReadFromJsonAsync<PaginatedResult<WorkItemResponse>>();
+        var result = await response.Content.ReadFromJsonAsync<PaginatedResult<WorkItemResponse>>(JsonOptions);
         Assert.NotNull(result);
         Assert.True(result.Items.Count >= 1);
         Assert.All(result.Items, item => Assert.Equal(Domain.WorkItemPriority.High, item.Priority));
@@ -339,7 +347,7 @@ public class WorkItemsIntegrationTests : IClassFixture<WebApplicationFactory<Pro
 
         // Assert
         response.EnsureSuccessStatusCode();
-        var result = await response.Content.ReadFromJsonAsync<PaginatedResult<WorkItemResponse>>();
+        var result = await response.Content.ReadFromJsonAsync<PaginatedResult<WorkItemResponse>>(JsonOptions);
         Assert.NotNull(result);
         Assert.True(result.TotalCount >= 5);
         Assert.True(result.Items.Count <= 3);

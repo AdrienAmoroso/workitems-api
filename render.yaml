@@ -1,0 +1,44 @@
+# Render Blueprint - One-click deployment
+# https://render.com/docs/blueprint-spec
+
+databases:
+  - name: workitems-db
+    databaseName: workitems
+    user: workitems
+    plan: free
+    region: frankfurt
+
+services:
+  # Backend API
+  - type: web
+    name: workitems-api
+    runtime: docker
+    dockerfilePath: ./src/WorkItems.Api/Dockerfile
+    dockerContext: ./src/WorkItems.Api
+    plan: free
+    region: frankfurt
+    healthCheckPath: /swagger
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: workitems-db
+          property: connectionString
+      - key: Jwt__SecretKey
+        generateValue: true
+      - key: Cors__AllowedOrigins__0
+        value: https://workitems-web.onrender.com
+
+  # Frontend Static Site
+  - type: web
+    name: workitems-web
+    runtime: static
+    buildCommand: cd frontend/workitems-web && npm install && npm run build -- --configuration=production
+    staticPublishPath: ./frontend/workitems-web/dist/workitems-web/browser
+    plan: free
+    region: frankfurt
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

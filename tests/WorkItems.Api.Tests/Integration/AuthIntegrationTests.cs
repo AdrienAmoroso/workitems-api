@@ -4,6 +4,8 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using WorkItems.Api.Contracts.Auth;
 using WorkItems.Api.Contracts.WorkItems;
 using WorkItems.Api.Data;
@@ -24,6 +26,12 @@ public class AuthIntegrationTests : IClassFixture<WebApplicationFactory<Program>
     private const string TestSecretKey = "TestSecretKeyForJWTThatIsAtLeast32CharactersLong123456";
     private const string TestIssuer = "WorkItemsApi";
     private const string TestAudience = "WorkItemsApiUsers";
+    
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        Converters = { new JsonStringEnumConverter() }
+    };
 
     public AuthIntegrationTests(WebApplicationFactory<Program> factory)
     {
@@ -326,7 +334,7 @@ public class AuthIntegrationTests : IClassFixture<WebApplicationFactory<Program>
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
-        var workItem = await createResponse.Content.ReadFromJsonAsync<WorkItemResponse>();
+        var workItem = await createResponse.Content.ReadFromJsonAsync<WorkItemResponse>(JsonOptions);
         Assert.NotNull(workItem);
         Assert.Equal(createWorkItemRequest.Title, workItem.Title);
     }
