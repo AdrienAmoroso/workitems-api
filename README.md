@@ -233,14 +233,10 @@ The project includes **34 tests** covering:
 **Adrien Amoroso**
 
 - GitHub: [@AdrienAmoroso](https://github.com/AdrienAmoroso)
-- LinkedIn: [Your LinkedIn](https://linkedin.com/in/your-profile)
+- LinkedIn: [AdrienAmoroso](https://www.linkedin.com/in/adrien-amoroso/)
 
 ---
 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-If you found this project helpful, please consider giving it a star!
