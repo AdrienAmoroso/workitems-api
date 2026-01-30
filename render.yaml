@@ -37,7 +37,6 @@ services:
     buildCommand: cd frontend/workitems-web && npm install && npm run build -- --configuration=production
     staticPublishPath: ./frontend/workitems-web/dist/workitems-web/browser
     plan: free
-    region: frankfurt
     routes:
       - type: rewrite
         source: /*
