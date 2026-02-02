@@ -41,7 +41,8 @@ static string ConvertPostgresUrlToConnectionString(string databaseUrl)
     var port = uri.Port > 0 ? uri.Port : 5432;
     var database = uri.AbsolutePath.TrimStart('/');
     
-    return $"Host={host};Port={port};Database={database};Username={username};Password={password};SSL Mode=Require;Trust Server Certificate=true";
+    // Add connection pooling and timeout settings for Render free tier
+    return $"Host={host};Port={port};Database={database};Username={username};Password={password};SSL Mode=Require;Trust Server Certificate=true;Pooling=true;Minimum Pool Size=0;Maximum Pool Size=20;Connection Idle Lifetime=300;Connection Pruning Interval=10;Timeout=30;Command Timeout=30";
 }
 
 builder.Services.AddScoped<IWorkItemService, WorkItemService>();
@@ -96,6 +97,27 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// Global exception handler - logs errors and returns ProblemDetails
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        var exceptionFeature = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
+        var exception = exceptionFeature?.Error;
+        
+        var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+        logger.LogError(exception, "Unhandled exception occurred: {Message}", exception?.Message);
+        
+        context.Response.StatusCode = 500;
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsJsonAsync(new 
+        { 
+            error = "Internal server error", 
+            message = app.Environment.IsDevelopment() ? exception?.Message : "An unexpected error occurred"
+        });
+    });
+});
 
 // Apply migrations automatically (skip in Test environment)
 if (!app.Environment.EnvironmentName.Equals("Test", StringComparison.OrdinalIgnoreCase))
