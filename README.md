@@ -14,15 +14,18 @@ A full-stack **Work Items management system** (similar to Jira tickets) built wi
 ## What This Project Demonstrates
 
 **Backend**
+
 - ASP.NET Core Web API with Controllers and REST conventions
 - Entity Framework Core with SQLite and Code-First Migrations
 - JWT Authentication with BCrypt password hashing
+- **Role-Based Access Control** with named Authorization Policies (Viewer / Member / Admin)
 - Clean Architecture (Controllers → Services → Data Layer)
 - Input Validation, Pagination, Filtering & Sorting
 - Unit & Integration Tests with xUnit
 - CI/CD Pipeline with GitHub Actions
 
 **Frontend**
+
 - Angular 19 with standalone components
 - Angular Material UI
 - Reactive Forms with validation
@@ -31,14 +34,14 @@ A full-stack **Work Items management system** (similar to Jira tickets) built wi
 
 ## Tech Stack
 
-| Backend | Frontend |
-|---------|----------|
-| ASP.NET Core 10 | Angular 19 |
-| C# 13 | TypeScript |
+| Backend               | Frontend         |
+| --------------------- | ---------------- |
+| ASP.NET Core 10       | Angular 19       |
+| C# 13                 | TypeScript       |
 | Entity Framework Core | Angular Material |
-| SQLite | RxJS |
-| JWT Bearer Auth | SCSS |
-| xUnit + Moq | |
+| SQLite                | RxJS             |
+| JWT Bearer Auth       | SCSS             |
+| xUnit + Moq           |                  |
 
 ## Project Structure
 
@@ -82,9 +85,9 @@ npm install
 ng serve --open
 ```
 
-| Service | URL |
-|---------|-----|
-| Angular App | http://localhost:4200 |
+| Service       | URL                   |
+| ------------- | --------------------- |
+| Angular App   | http://localhost:4200 |
 | API (Swagger) | http://localhost:5000 |
 
 ### Run Tests
@@ -97,40 +100,57 @@ dotnet test
 
 ### Authentication
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/auth/register` | Register a new user |
-| POST | `/api/auth/login` | Login and get JWT token |
+| Method | Endpoint             | Description             |
+| ------ | -------------------- | ----------------------- |
+| POST   | `/api/auth/register` | Register a new user     |
+| POST   | `/api/auth/login`    | Login and get JWT token |
 
 ### Work Items
 
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/api/work-items` | No | List all (paginated) |
-| GET | `/api/work-items/{id}` | No | Get by ID |
-| POST | `/api/work-items` | Yes | Create |
-| PUT | `/api/work-items/{id}` | Yes | Update |
-| DELETE | `/api/work-items/{id}` | Yes | Delete |
+| Method | Endpoint               | Role required | Description                      |
+| ------ | ---------------------- | ------------- | -------------------------------- |
+| GET    | `/api/work-items`      | —             | List all (paginated, filterable) |
+| GET    | `/api/work-items/{id}` | —             | Get by ID                        |
+| POST   | `/api/work-items`      | Member, Admin | Create                           |
+| PUT    | `/api/work-items/{id}` | Member, Admin | Update                           |
+| DELETE | `/api/work-items/{id}` | Admin         | Delete                           |
 
 **Query Parameters:** `page`, `pageSize`, `status`, `priority`, `sortBy`, `sortDir`
 
+## Roles & Permissions
+
+| Role   | GET | POST (create) | PUT (update) | DELETE |
+| ------ | --- | ------------- | ------------ | ------ |
+| Viewer | ✅  | ❌            | ❌           | ❌     |
+| Member | ✅  | ✅            | ✅           | ❌     |
+| Admin  | ✅  | ✅            | ✅           | ✅     |
+
+**Demo accounts** (pre-seeded, always available on the live demo):
+
+| Email             | Password      | Role   |
+| ----------------- | ------------- | ------ |
+| `admin@demo.com`  | `Admin1234!`  | Admin  |
+| `viewer@demo.com` | `Viewer1234!` | Viewer |
+
 ## Frontend Pages
 
-| Page | Route | Description |
-|------|-------|-------------|
-| Login | `/auth/login` | User authentication |
-| Register | `/auth/register` | New user registration |
-| Work Items | `/work-items` | List with filtering & sorting |
-| Detail | `/work-items/:id` | View single item |
-| Create/Edit | `/work-items/new` | Form for CRUD operations |
+| Page        | Route             | Description                   |
+| ----------- | ----------------- | ----------------------------- |
+| Login       | `/auth/login`     | User authentication           |
+| Register    | `/auth/register`  | New user registration         |
+| Work Items  | `/work-items`     | List with filtering & sorting |
+| Detail      | `/work-items/:id` | View single item              |
+| Create/Edit | `/work-items/new` | Form for CRUD operations      |
 
 ## Test Coverage
 
-**34 tests** covering:
+**41 tests** covering:
+
 - WorkItemService CRUD operations
 - Authentication flow (register, login)
 - Protected endpoints with JWT validation
-- Error handling (404, 401, 400)
+- Authorization policies: Viewer/Member/Admin on POST, PUT, DELETE
+- Error handling (404, 401, 403, 400)
 
 ## Roadmap
 
@@ -139,7 +159,7 @@ dotnet test
 - [x] Angular Frontend with Material UI
 - [x] GitHub Actions CI
 - [x] Render deployment (PostgreSQL)
-- [ ] Role-based authorization
+- [x] Role-based authorization (Viewer / Member / Admin)
 - [ ] Health checks endpoint
 
 ## Author

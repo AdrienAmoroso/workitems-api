@@ -65,6 +65,7 @@ public class WorkItemsController : ControllerBase
     /// <summary>
     /// Create a new work item
     /// </summary>
+    /// <remarks>Requires role: **Member** or **Admin** (policy: CanManageWorkItems).</remarks>
     [HttpPost]
     [Authorize(Policy = "CanManageWorkItems")]
     [ProducesResponseType(typeof(WorkItemResponse), StatusCodes.Status201Created)]
@@ -83,6 +84,7 @@ public class WorkItemsController : ControllerBase
     /// <summary>
     /// Update an existing work item
     /// </summary>
+    /// <remarks>Requires role: **Member** or **Admin** (policy: CanManageWorkItems).</remarks>
     [HttpPut("{id:guid}")]
     [Authorize(Policy = "CanManageWorkItems")]
     [ProducesResponseType(typeof(WorkItemResponse), StatusCodes.Status200OK)]
@@ -109,6 +111,7 @@ public class WorkItemsController : ControllerBase
     /// <summary>
     /// Delete a work item
     /// </summary>
+    /// <remarks>Requires role: **Admin** only (policy: CanDeleteWorkItems).</remarks>
     [HttpDelete("{id:guid}")]
     [Authorize(Policy = "CanDeleteWorkItems")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

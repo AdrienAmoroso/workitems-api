@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json.Serialization;
+using Microsoft.OpenApi;
 using WorkItems.Api.Data;
 using WorkItems.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -89,7 +90,59 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title       = "Work Items API",
+        Version     = "v1",
+        Description = """
+            A lightweight work items manager (Jira-like) built with ASP.NET Core 10.
+
+            ## Roles & Permissions
+
+            | Role    | GET | POST (create) | PUT (update) | DELETE |
+            |---------|-----|---------------|--------------|--------|
+            | Viewer  | ✅  | ❌            | ❌           | ❌     |
+            | Member  | ✅  | ✅            | ✅           | ❌     |
+            | Admin   | ✅  | ✅            | ✅           | ✅     |
+
+            ## Demo Accounts
+
+            | Email              | Password     | Role   |
+            |--------------------|--------------|--------|
+            | admin@demo.com     | Admin1234!   | Admin  |
+            | viewer@demo.com    | Viewer1234!  | Viewer |
+
+            Login via `POST /api/auth/login`, then click **Authorize** and paste the returned token.
+            """
+    });
+
+    // Declare the JWT Bearer security scheme so the Swagger UI "Authorize" button works
+    var jwtScheme = new OpenApiSecurityScheme
+    {
+        Name         = "Authorization",
+        Type         = SecuritySchemeType.Http,
+        Scheme       = "bearer",
+        BearerFormat = "JWT",
+        In           = ParameterLocation.Header,
+        Description  = "Paste the JWT token returned by /api/auth/login. Example: `eyJhbGci...`"
+    };
+    options.AddSecurityDefinition("Bearer", jwtScheme);
+    options.AddSecurityRequirement(doc => new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecuritySchemeReference("Bearer", doc),
+            new List<string>()
+        }
+    });
+
+    // Include XML doc comments generated from /// summaries on controllers
+    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+        options.IncludeXmlComments(xmlPath);
+});
 
 // Add CORS for Angular frontend
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() 
