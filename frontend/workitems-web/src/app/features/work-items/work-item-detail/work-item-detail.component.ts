@@ -1,15 +1,15 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { MatCardModule } from '@angular/material/card';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
+import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { WorkItemService, AuthService } from '../../../core/services';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { WorkItem } from '../../../core/models';
+import { AuthService, WorkItemService } from '../../../core/services';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
@@ -24,7 +24,7 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
     MatChipsModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
-    MatDialogModule
+    MatDialogModule,
   ],
   template: `
     <div class="container">
@@ -39,8 +39,8 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
           <mat-card-header>
             <mat-card-title>{{ workItem()!.title }}</mat-card-title>
             <mat-card-subtitle>
-              Created: {{ workItem()!.createdAt | date:'medium' }} |
-              Updated: {{ workItem()!.updatedAt | date:'medium' }}
+              Created: {{ workItem()!.createdAt | date: 'medium' }} | Updated:
+              {{ workItem()!.updatedAt | date: 'medium' }}
             </mat-card-subtitle>
           </mat-card-header>
 
@@ -65,11 +65,17 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
               <mat-icon>arrow_back</mat-icon>
               Back to List
             </a>
-            @if (authService.isAuthenticated()) {
-              <a mat-raised-button color="primary" [routerLink]="['/work-items', workItem()!.id, 'edit']">
+            @if (authService.canManage()) {
+              <a
+                mat-raised-button
+                color="primary"
+                [routerLink]="['/work-items', workItem()!.id, 'edit']"
+              >
                 <mat-icon>edit</mat-icon>
                 Edit
               </a>
+            }
+            @if (authService.isAdmin()) {
               <button mat-raised-button color="warn" (click)="deleteWorkItem()">
                 <mat-icon>delete</mat-icon>
                 Delete
@@ -85,76 +91,94 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
             <mat-icon>error_outline</mat-icon>
             <h2>Work Item Not Found</h2>
             <p>The requested work item could not be found.</p>
-            <a mat-raised-button color="primary" routerLink="/work-items">
-              Back to List
-            </a>
+            <a mat-raised-button color="primary" routerLink="/work-items"> Back to List </a>
           </mat-card-content>
         </mat-card>
       }
     </div>
   `,
-  styles: [`
-    .container {
-      padding: 24px;
-      max-width: 800px;
-      margin: 0 auto;
-    }
+  styles: [
+    `
+      .container {
+        padding: 24px;
+        max-width: 800px;
+        margin: 0 auto;
+      }
 
-    .loading-container {
-      display: flex;
-      justify-content: center;
-      padding: 48px;
-    }
+      .loading-container {
+        display: flex;
+        justify-content: center;
+        padding: 48px;
+      }
 
-    .chips {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 24px;
-    }
+      .chips {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 24px;
+      }
 
-    .description {
-      margin-top: 16px;
-    }
+      .description {
+        margin-top: 16px;
+      }
 
-    .description h3 {
-      margin-bottom: 8px;
-      color: #666;
-    }
+      .description h3 {
+        margin-bottom: 8px;
+        color: #666;
+      }
 
-    .description p {
-      white-space: pre-wrap;
-      line-height: 1.6;
-    }
+      .description p {
+        white-space: pre-wrap;
+        line-height: 1.6;
+      }
 
-    .status-todo { background-color: #e3f2fd !important; color: #1976d2 !important; }
-    .status-inprogress { background-color: #fff3e0 !important; color: #f57c00 !important; }
-    .status-done { background-color: #e8f5e9 !important; color: #388e3c !important; }
+      .status-todo {
+        background-color: #e3f2fd !important;
+        color: #1976d2 !important;
+      }
+      .status-inprogress {
+        background-color: #fff3e0 !important;
+        color: #f57c00 !important;
+      }
+      .status-done {
+        background-color: #e8f5e9 !important;
+        color: #388e3c !important;
+      }
 
-    .priority-low { background-color: #f5f5f5 !important; color: #757575 !important; }
-    .priority-medium { background-color: #fff8e1 !important; color: #ffa000 !important; }
-    .priority-high { background-color: #ffebee !important; color: #d32f2f !important; }
+      .priority-low {
+        background-color: #f5f5f5 !important;
+        color: #757575 !important;
+      }
+      .priority-medium {
+        background-color: #fff8e1 !important;
+        color: #ffa000 !important;
+      }
+      .priority-high {
+        background-color: #ffebee !important;
+        color: #d32f2f !important;
+      }
 
-    .not-found {
-      text-align: center;
-      padding: 48px;
-    }
+      .not-found {
+        text-align: center;
+        padding: 48px;
+      }
 
-    .not-found mat-icon {
-      font-size: 64px;
-      width: 64px;
-      height: 64px;
-      color: #f44336;
-    }
+      .not-found mat-icon {
+        font-size: 64px;
+        width: 64px;
+        height: 64px;
+        color: #f44336;
+      }
 
-    .not-found h2 {
-      margin: 16px 0 8px;
-    }
+      .not-found h2 {
+        margin: 16px 0 8px;
+      }
 
-    .not-found p {
-      color: #757575;
-      margin-bottom: 24px;
-    }
-  `]
+      .not-found p {
+        color: #757575;
+        margin-bottom: 24px;
+      }
+    `,
+  ],
 })
 export class WorkItemDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
@@ -184,7 +208,7 @@ export class WorkItemDetailComponent implements OnInit {
       error: () => {
         this.isLoading.set(false);
         this.workItem.set(null);
-      }
+      },
     });
   }
 
@@ -195,11 +219,11 @@ export class WorkItemDetailComponent implements OnInit {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       data: {
         title: 'Delete Work Item',
-        message: `Are you sure you want to delete "${item.title}"?`
-      }
+        message: `Are you sure you want to delete "${item.title}"?`,
+      },
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.workItemService.delete(item.id).subscribe({
           next: () => {
@@ -208,7 +232,7 @@ export class WorkItemDetailComponent implements OnInit {
           },
           error: () => {
             this.snackBar.open('Failed to delete work item', 'Close', { duration: 5000 });
-          }
+          },
         });
       }
     });

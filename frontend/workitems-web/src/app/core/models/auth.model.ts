@@ -1,6 +1,9 @@
+export type UserRole = 'Admin' | 'Member' | 'Viewer';
+
 export interface User {
   username: string;
   email: string;
+  role: UserRole;
 }
 
 export interface AuthResponse {

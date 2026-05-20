@@ -1,22 +1,28 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MatTableModule } from '@angular/material/table';
-import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSelectModule } from '@angular/material/select';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSelectModule } from '@angular/material/select';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSortModule, Sort } from '@angular/material/sort';
+import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { WorkItemService, AuthService } from '../../../core/services';
-import { WorkItem, WorkItemStatus, WorkItemPriority, WorkItemFilter, PaginatedResult } from '../../../core/models';
+import { RouterLink } from '@angular/router';
+import {
+    PaginatedResult,
+    WorkItem,
+    WorkItemFilter,
+    WorkItemPriority,
+    WorkItemStatus,
+} from '../../../core/models';
+import { AuthService, WorkItemService } from '../../../core/services';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
@@ -38,13 +44,13 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
     MatProgressSpinnerModule,
     MatSnackBarModule,
     MatDialogModule,
-    MatTooltipModule
+    MatTooltipModule,
   ],
   template: `
     <div class="container">
       <div class="header">
         <h1>Work Items</h1>
-        @if (authService.isAuthenticated()) {
+        @if (authService.canManage()) {
           <a mat-raised-button color="primary" routerLink="/work-items/create">
             <mat-icon>add</mat-icon>
             New Work Item
@@ -126,7 +132,7 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
             <!-- Created Column -->
             <ng-container matColumnDef="createdAt">
               <th mat-header-cell *matHeaderCellDef mat-sort-header>Created</th>
-              <td mat-cell *matCellDef="let item">{{ item.createdAt | date:'short' }}</td>
+              <td mat-cell *matCellDef="let item">{{ item.createdAt | date: 'short' }}</td>
             </ng-container>
 
             <!-- Actions Column -->
@@ -136,11 +142,22 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
                 <a mat-icon-button [routerLink]="['/work-items', item.id]" matTooltip="View">
                   <mat-icon>visibility</mat-icon>
                 </a>
-                @if (authService.isAuthenticated()) {
-                  <a mat-icon-button [routerLink]="['/work-items', item.id, 'edit']" matTooltip="Edit">
+                @if (authService.canManage()) {
+                  <a
+                    mat-icon-button
+                    [routerLink]="['/work-items', item.id, 'edit']"
+                    matTooltip="Edit"
+                  >
                     <mat-icon>edit</mat-icon>
                   </a>
-                  <button mat-icon-button color="warn" (click)="deleteWorkItem(item)" matTooltip="Delete">
+                }
+                @if (authService.isAdmin()) {
+                  <button
+                    mat-icon-button
+                    color="warn"
+                    (click)="deleteWorkItem(item)"
+                    matTooltip="Delete"
+                  >
                     <mat-icon>delete</mat-icon>
                   </button>
                 }
@@ -148,7 +165,7 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
             </ng-container>
 
             <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
           </table>
 
           <mat-paginator
@@ -157,7 +174,8 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
             [pageIndex]="(filter.page || 1) - 1"
             [pageSizeOptions]="[5, 10, 25, 50]"
             (page)="onPageChange($event)"
-            showFirstLastButtons>
+            showFirstLastButtons
+          >
           </mat-paginator>
         </div>
       }
@@ -169,103 +187,121 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
             <mat-icon>inbox</mat-icon>
             <h2>No work items found</h2>
             <p>Create your first work item to get started.</p>
-            @if (authService.isAuthenticated()) {
+            @if (authService.canManage()) {
               <a mat-raised-button color="primary" routerLink="/work-items/create">
                 Create Work Item
               </a>
             } @else {
-              <a mat-raised-button color="primary" routerLink="/auth/login">
-                Login to Create
-              </a>
+              <a mat-raised-button color="primary" routerLink="/auth/login"> Login to Create </a>
             }
           </mat-card-content>
         </mat-card>
       }
     </div>
   `,
-  styles: [`
-    .container {
-      padding: 24px;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
+  styles: [
+    `
+      .container {
+        padding: 24px;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
 
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 24px;
-    }
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+      }
 
-    .filters-card {
-      margin-bottom: 24px;
-    }
+      .filters-card {
+        margin-bottom: 24px;
+      }
 
-    .filters {
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
+      .filters {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
 
-    .filters mat-form-field {
-      width: 150px;
-    }
+      .filters mat-form-field {
+        width: 150px;
+      }
 
-    .loading-container {
-      display: flex;
-      justify-content: center;
-      padding: 48px;
-    }
+      .loading-container {
+        display: flex;
+        justify-content: center;
+        padding: 48px;
+      }
 
-    .table-container {
-      overflow-x: auto;
-      border-radius: 4px;
-    }
+      .table-container {
+        overflow-x: auto;
+        border-radius: 4px;
+      }
 
-    table {
-      width: 100%;
-    }
+      table {
+        width: 100%;
+      }
 
-    .title-link {
-      color: inherit;
-      text-decoration: none;
-      font-weight: 500;
-    }
+      .title-link {
+        color: inherit;
+        text-decoration: none;
+        font-weight: 500;
+      }
 
-    .title-link:hover {
-      text-decoration: underline;
-    }
+      .title-link:hover {
+        text-decoration: underline;
+      }
 
-    .status-todo { background-color: #e3f2fd !important; color: #1976d2 !important; }
-    .status-inprogress { background-color: #fff3e0 !important; color: #f57c00 !important; }
-    .status-done { background-color: #e8f5e9 !important; color: #388e3c !important; }
+      .status-todo {
+        background-color: #e3f2fd !important;
+        color: #1976d2 !important;
+      }
+      .status-inprogress {
+        background-color: #fff3e0 !important;
+        color: #f57c00 !important;
+      }
+      .status-done {
+        background-color: #e8f5e9 !important;
+        color: #388e3c !important;
+      }
 
-    .priority-low { background-color: #f5f5f5 !important; color: #757575 !important; }
-    .priority-medium { background-color: #fff8e1 !important; color: #ffa000 !important; }
-    .priority-high { background-color: #ffebee !important; color: #d32f2f !important; }
+      .priority-low {
+        background-color: #f5f5f5 !important;
+        color: #757575 !important;
+      }
+      .priority-medium {
+        background-color: #fff8e1 !important;
+        color: #ffa000 !important;
+      }
+      .priority-high {
+        background-color: #ffebee !important;
+        color: #d32f2f !important;
+      }
 
-    .empty-state {
-      text-align: center;
-      padding: 48px;
-    }
+      .empty-state {
+        text-align: center;
+        padding: 48px;
+      }
 
-    .empty-state mat-icon {
-      font-size: 64px;
-      width: 64px;
-      height: 64px;
-      color: #9e9e9e;
-    }
+      .empty-state mat-icon {
+        font-size: 64px;
+        width: 64px;
+        height: 64px;
+        color: #9e9e9e;
+      }
 
-    .empty-state h2 {
-      margin: 16px 0 8px;
-    }
+      .empty-state h2 {
+        margin: 16px 0 8px;
+      }
 
-    .empty-state p {
-      color: #757575;
-      margin-bottom: 24px;
-    }
-  `]
+      .empty-state p {
+        color: #757575;
+        margin-bottom: 24px;
+      }
+    `,
+  ],
 })
 export class WorkItemListComponent implements OnInit {
   private workItemService = inject(WorkItemService);
@@ -287,7 +323,7 @@ export class WorkItemListComponent implements OnInit {
     status: null,
     priority: null,
     sortBy: 'createdAt',
-    sortDir: 'desc'
+    sortDir: 'desc',
   };
 
   ngOnInit(): void {
@@ -305,7 +341,7 @@ export class WorkItemListComponent implements OnInit {
       error: (error) => {
         this.isLoading.set(false);
         this.snackBar.open('Failed to load work items', 'Close', { duration: 5000 });
-      }
+      },
     });
   }
 
@@ -321,7 +357,7 @@ export class WorkItemListComponent implements OnInit {
       status: null,
       priority: null,
       sortBy: 'createdAt',
-      sortDir: 'desc'
+      sortDir: 'desc',
     };
     this.loadWorkItems();
   }
@@ -334,7 +370,7 @@ export class WorkItemListComponent implements OnInit {
 
   onSort(sort: Sort): void {
     this.filter.sortBy = sort.active;
-    this.filter.sortDir = sort.direction as 'asc' | 'desc' || 'desc';
+    this.filter.sortDir = (sort.direction as 'asc' | 'desc') || 'desc';
     this.loadWorkItems();
   }
 
@@ -342,11 +378,11 @@ export class WorkItemListComponent implements OnInit {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       data: {
         title: 'Delete Work Item',
-        message: `Are you sure you want to delete "${item.title}"?`
-      }
+        message: `Are you sure you want to delete "${item.title}"?`,
+      },
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.workItemService.delete(item.id).subscribe({
           next: () => {
@@ -355,7 +391,7 @@ export class WorkItemListComponent implements OnInit {
           },
           error: () => {
             this.snackBar.open('Failed to delete work item', 'Close', { duration: 5000 });
-          }
+          },
         });
       }
     });
