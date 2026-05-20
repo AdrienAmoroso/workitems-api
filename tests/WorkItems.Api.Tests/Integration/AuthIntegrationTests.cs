@@ -3,81 +3,25 @@ namespace WorkItems.Api.Tests.Integration;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using WorkItems.Api.Contracts.Auth;
 using WorkItems.Api.Contracts.WorkItems;
-using WorkItems.Api.Data;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
+using WorkItems.Api.Tests.Helpers;
 
-public class AuthIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
+public class AuthIntegrationTests : IClassFixture<WorkItemsWebApplicationFactory>
 {
-    private readonly WebApplicationFactory<Program> _factory;
-    private static readonly string DatabaseName = "TestDatabase_Auth_" + Guid.NewGuid();
-    private const string TestSecretKey = "TestSecretKeyForJWTThatIsAtLeast32CharactersLong123456";
-    private const string TestIssuer = "WorkItemsApi";
-    private const string TestAudience = "WorkItemsApiUsers";
-    
+    private readonly WorkItemsWebApplicationFactory _factory;
+
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNameCaseInsensitive = true,
         Converters = { new JsonStringEnumConverter() }
     };
 
-    public AuthIntegrationTests(WebApplicationFactory<Program> factory)
+    public AuthIntegrationTests(WorkItemsWebApplicationFactory factory)
     {
-        _factory = factory.WithWebHostBuilder(builder =>
-        {
-            builder.UseEnvironment("Test");
-            
-            builder.ConfigureAppConfiguration((context, config) =>
-            {
-                config.AddInMemoryCollection(new Dictionary<string, string?>
-                {
-                    ["Jwt:SecretKey"] = TestSecretKey,
-                    ["Jwt:Issuer"] = TestIssuer,
-                    ["Jwt:Audience"] = TestAudience,
-                    ["Jwt:ExpirationHours"] = "24"
-                }!);
-            });
-            
-            builder.ConfigureServices(services =>
-            {
-                services.AddDbContext<AppDbContext>(options =>
-                {
-                    options.UseInMemoryDatabase(DatabaseName);
-                });
-
-                services.PostConfigure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
-                {
-                    options.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        ValidateIssuer = true,
-                        ValidateAudience = true,
-                        ValidateLifetime = true,
-                        ValidateIssuerSigningKey = true,
-                        ValidIssuer = TestIssuer,
-                        ValidAudience = TestAudience,
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(TestSecretKey)),
-                        ClockSkew = TimeSpan.Zero
-                    };
-                });
-
-                var serviceProvider = services.BuildServiceProvider();
-                using var scope = serviceProvider.CreateScope();
-                var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                dbContext.Database.EnsureCreated();
-            });
-        });
+        _factory = factory;
     }
 
     [Fact]

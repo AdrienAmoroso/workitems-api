@@ -3,82 +3,26 @@ namespace WorkItems.Api.Tests.Integration;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using WorkItems.Api.Contracts.Auth;
 using WorkItems.Api.Contracts.WorkItems;
-using WorkItems.Api.Data;
 using WorkItems.Api.Services;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
+using WorkItems.Api.Tests.Helpers;
 
-public class WorkItemsIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
+public class WorkItemsIntegrationTests : IClassFixture<WorkItemsWebApplicationFactory>
 {
-    private readonly WebApplicationFactory<Program> _factory;
-    private static readonly string DatabaseName = "TestDatabase_WorkItems_" + Guid.NewGuid();
-    private const string TestSecretKey = "TestSecretKeyForJWTThatIsAtLeast32CharactersLong123456";
-    private const string TestIssuer = "WorkItemsApi";
-    private const string TestAudience = "WorkItemsApiUsers";
-    
+    private readonly WorkItemsWebApplicationFactory _factory;
+
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNameCaseInsensitive = true,
         Converters = { new JsonStringEnumConverter() }
     };
 
-    public WorkItemsIntegrationTests(WebApplicationFactory<Program> factory)
+    public WorkItemsIntegrationTests(WorkItemsWebApplicationFactory factory)
     {
-        _factory = factory.WithWebHostBuilder(builder =>
-        {
-            builder.UseEnvironment("Test");
-            
-            builder.ConfigureAppConfiguration((context, config) =>
-            {
-                config.AddInMemoryCollection(new Dictionary<string, string?>
-                {
-                    ["Jwt:SecretKey"] = TestSecretKey,
-                    ["Jwt:Issuer"] = TestIssuer,
-                    ["Jwt:Audience"] = TestAudience,
-                    ["Jwt:ExpirationHours"] = "24"
-                }!);
-            });
-            
-            builder.ConfigureServices(services =>
-            {
-                services.AddDbContext<AppDbContext>(options =>
-                {
-                    options.UseInMemoryDatabase(DatabaseName);
-                });
-
-                services.PostConfigure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
-                {
-                    options.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        ValidateIssuer = true,
-                        ValidateAudience = true,
-                        ValidateLifetime = true,
-                        ValidateIssuerSigningKey = true,
-                        ValidIssuer = TestIssuer,
-                        ValidAudience = TestAudience,
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(TestSecretKey)),
-                        ClockSkew = TimeSpan.Zero
-                    };
-                });
-
-                var serviceProvider = services.BuildServiceProvider();
-                using var scope = serviceProvider.CreateScope();
-                var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                dbContext.Database.EnsureCreated();
-            });
-        });
+        _factory = factory;
     }
 
     [Fact]
@@ -255,7 +199,7 @@ public class WorkItemsIntegrationTests : IClassFixture<WebApplicationFactory<Pro
         // Arrange
         var client = _factory.CreateClient();
         // DELETE requires Admin role (CanDeleteWorkItems policy) — use a direct token
-        var adminToken = CreateTokenWithRole("Admin");
+        var adminToken = JwtTestHelper.CreateToken("Admin");
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
 
         var createRequest = new CreateWorkItemRequest
@@ -371,30 +315,5 @@ public class WorkItemsIntegrationTests : IClassFixture<WebApplicationFactory<Pro
         return authResponse!.Token;
     }
 
-    /// <summary>
-    /// Generates a JWT directly with the specified role claim — used to test
-    /// authorization policies without going through the registration flow.
-    /// </summary>
-    private static string CreateTokenWithRole(string role)
-    {
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(TestSecretKey));
-        var credentials = new Microsoft.IdentityModel.Tokens.SigningCredentials(key, Microsoft.IdentityModel.Tokens.SecurityAlgorithms.HmacSha256);
-
-        var claims = new[]
-        {
-            new System.Security.Claims.Claim(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub, Guid.NewGuid().ToString()),
-            new System.Security.Claims.Claim(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.UniqueName, "testuser_" + role.ToLower()),
-            new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, role)
-        };
-
-        var token = new System.IdentityModel.Tokens.Jwt.JwtSecurityToken(
-            issuer: TestIssuer,
-            audience: TestAudience,
-            claims: claims,
-            expires: DateTime.UtcNow.AddHours(1),
-            signingCredentials: credentials
-        );
-
-        return new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler().WriteToken(token);
-    }
 }
+
