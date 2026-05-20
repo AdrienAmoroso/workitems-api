@@ -71,7 +71,17 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    // ADR-01: Authorization via named Policies, not raw role strings.
+    // CanManageWorkItems — Members and Admins can create and edit work items.
+    options.AddPolicy("CanManageWorkItems", policy =>
+        policy.RequireRole("Member", "Admin"));
+
+    // CanDeleteWorkItems — Admins only can delete work items.
+    options.AddPolicy("CanDeleteWorkItems", policy =>
+        policy.RequireRole("Admin"));
+});
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -140,6 +150,9 @@ if (!app.Environment.EnvironmentName.Equals("Test", StringComparison.OrdinalIgno
         // For SQLite in development: use migrations
         dbContext.Database.Migrate();
     }
+
+    // Seed demo accounts (admin@demo.com + viewer@demo.com) — idempotent, safe on every boot
+    await DatabaseSeeder.SeedAsync(dbContext);
 }
 
 // CORS must be first to handle preflight requests

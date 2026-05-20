@@ -254,8 +254,9 @@ public class WorkItemsIntegrationTests : IClassFixture<WebApplicationFactory<Pro
     {
         // Arrange
         var client = _factory.CreateClient();
-        var token = await RegisterAndGetTokenAsync(client);
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        // DELETE requires Admin role (CanDeleteWorkItems policy) — use a direct token
+        var adminToken = CreateTokenWithRole("Admin");
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
 
         var createRequest = new CreateWorkItemRequest
         {
@@ -368,5 +369,32 @@ public class WorkItemsIntegrationTests : IClassFixture<WebApplicationFactory<Pro
 
         var authResponse = await response.Content.ReadFromJsonAsync<AuthResponse>();
         return authResponse!.Token;
+    }
+
+    /// <summary>
+    /// Generates a JWT directly with the specified role claim — used to test
+    /// authorization policies without going through the registration flow.
+    /// </summary>
+    private static string CreateTokenWithRole(string role)
+    {
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(TestSecretKey));
+        var credentials = new Microsoft.IdentityModel.Tokens.SigningCredentials(key, Microsoft.IdentityModel.Tokens.SecurityAlgorithms.HmacSha256);
+
+        var claims = new[]
+        {
+            new System.Security.Claims.Claim(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub, Guid.NewGuid().ToString()),
+            new System.Security.Claims.Claim(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.UniqueName, "testuser_" + role.ToLower()),
+            new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, role)
+        };
+
+        var token = new System.IdentityModel.Tokens.Jwt.JwtSecurityToken(
+            issuer: TestIssuer,
+            audience: TestAudience,
+            claims: claims,
+            expires: DateTime.UtcNow.AddHours(1),
+            signingCredentials: credentials
+        );
+
+        return new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler().WriteToken(token);
     }
 }
