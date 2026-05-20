@@ -1,6 +1,4 @@
-namespace WorkItems.Api.Domain;
-
-using WorkItems.Api.Domain.Enums;
+namespace DotnetPortfolioApi.Api.Domain;
 
 public class User
 {
@@ -11,9 +9,6 @@ public class User
     public string Email { get; set; } = null!;
     
     public string PasswordHash { get; set; } = null!;
-
-    /// <summary>The role assigned to this user, controlling their access level.</summary>
-    public UserRole Role { get; set; } = UserRole.Member;
     
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     

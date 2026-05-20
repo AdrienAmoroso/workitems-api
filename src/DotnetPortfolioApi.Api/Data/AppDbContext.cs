@@ -1,7 +1,6 @@
-namespace WorkItems.Api.Data;
+namespace DotnetPortfolioApi.Api.Data;
 
-using WorkItems.Api.Domain;
-using WorkItems.Api.Domain.Enums;
+using DotnetPortfolioApi.Api.Domain;
 using Microsoft.EntityFrameworkCore;
 
 public class AppDbContext : DbContext
@@ -36,7 +35,6 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Email).IsRequired().HasMaxLength(255);
             entity.HasIndex(e => e.Email).IsUnique();
             entity.Property(e => e.PasswordHash).IsRequired();
-            entity.Property(e => e.Role).IsRequired().HasDefaultValue(UserRole.Member);
             entity.Property(e => e.CreatedAt).IsRequired();
             entity.Property(e => e.UpdatedAt).IsRequired();
         });
