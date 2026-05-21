@@ -4,6 +4,7 @@ using Microsoft.OpenApi;
 using Serilog;
 using Serilog.Formatting.Json;
 using WorkItems.Api.Data;
+using WorkItems.Api.Middleware;
 using WorkItems.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -170,26 +171,9 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Global exception handler - logs errors and returns ProblemDetails
-app.UseExceptionHandler(errorApp =>
-{
-    errorApp.Run(async context =>
-    {
-        var exceptionFeature = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
-        var exception = exceptionFeature?.Error;
-        
-        var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
-        logger.LogError(exception, "Unhandled exception occurred: {Message}", exception?.Message);
-        
-        context.Response.StatusCode = 500;
-        context.Response.ContentType = "application/json";
-        await context.Response.WriteAsJsonAsync(new 
-        { 
-            error = "Internal server error", 
-            message = app.Environment.IsDevelopment() ? exception?.Message : "An unexpected error occurred"
-        });
-    });
-});
+// ADR-06: Global exception middleware — logs via Serilog, returns ProblemDetails (RFC 7807).
+// Must be first in the pipeline so every downstream exception is caught.
+app.UseMiddleware<GlobalExceptionMiddleware>();
 
 // Apply migrations automatically (skip in Test environment)
 if (!app.Environment.EnvironmentName.Equals("Test", StringComparison.OrdinalIgnoreCase))
