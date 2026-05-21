@@ -1,6 +1,7 @@
 # Work Items API
 
 [![CI](https://github.com/AdrienAmoroso/workitems-api/actions/workflows/ci.yml/badge.svg)](https://github.com/AdrienAmoroso/workitems-api/actions/workflows/ci.yml)
+[![Health](https://img.shields.io/website?label=health&url=https%3A%2F%2Fworkitems-api.onrender.com%2Fhealth)](https://workitems-api.onrender.com/health)
 ![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet)
 ![Angular](https://img.shields.io/badge/Angular-19-DD0031?logo=angular)
 ![License](https://img.shields.io/badge/License-MIT-green)
@@ -22,6 +23,7 @@ A full-stack **Work Items management system** (similar to Jira tickets) built wi
 - Clean Architecture (Controllers → Services → Data Layer)
 - Input Validation, Pagination, Filtering & Sorting
 - Unit & Integration Tests with xUnit
+- Structured Logging with Serilog (JSON output) and `/health` + `/health/ready` endpoints
 - CI/CD Pipeline with GitHub Actions
 
 **Frontend**
