@@ -1,6 +1,8 @@
 using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.OpenApi;
+using Serilog;
+using Serilog.Formatting.Json;
 using WorkItems.Api.Data;
 using WorkItems.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -8,6 +10,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Serilog: structured JSON logging — replaces the default ASP.NET Core logger.
+// JsonFormatter writes one JSON object per log event, suitable for log aggregators.
+builder.Host.UseSerilog((context, configuration) =>
+    configuration
+        .ReadFrom.Configuration(context.Configuration)
+        .WriteTo.Console(new JsonFormatter()));
 
 // Database configuration: PostgreSQL for production, SQLite for development
 if (!builder.Environment.EnvironmentName.Equals("Test", StringComparison.OrdinalIgnoreCase))
