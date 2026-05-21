@@ -99,6 +99,10 @@ builder.Services.AddControllers()
     {
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
+
+// Health checks: /health (liveness) and /health/ready (readiness + DB probe)
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<AppDbContext>(name: "database", tags: ["ready"]);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -221,5 +225,13 @@ if (!app.Environment.IsProduction())
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+// Liveness: fast ping, no external dependency check.
+// Readiness: includes the DB probe — tagged "ready" — used by load balancers before routing traffic.
+app.MapHealthChecks("/health");
+app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready")
+});
 
 app.Run();
