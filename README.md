@@ -160,9 +160,9 @@ dotnet test
 - [x] JWT Authentication
 - [x] Angular Frontend with Material UI
 - [x] GitHub Actions CI
-- [x] Render deployment (PostgreSQL)
+- [x] Azure deployment (App Service + PostgreSQL Flexible Server)
 - [x] Role-based authorization (Viewer / Member / Admin)
-- [ ] Health checks endpoint
+- [x] Health checks endpoint (`/health`, `/health/ready`)
 
 ## Author
 

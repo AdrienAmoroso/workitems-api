@@ -255,7 +255,7 @@ app.UseSwaggerUI(options =>
     options.RoutePrefix = "swagger";
 });
 
-// Skip HTTPS redirection in production (Render handles SSL termination)
+// Skip HTTPS redirection in production (Azure App Service handles SSL termination at the reverse proxy)
 if (!app.Environment.IsProduction())
 {
     app.UseHttpsRedirection();
