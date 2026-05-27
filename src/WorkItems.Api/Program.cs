@@ -71,7 +71,11 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 // Application Insights: telemetry (requests, exceptions, dependencies) sent to Azure Monitor.
 // Connection string is injected via APPLICATIONINSIGHTS_CONNECTION_STRING in Azure App Settings.
 // Skipped in Test environment — the background telemetry worker breaks WebApplicationFactory.
-if (!builder.Environment.EnvironmentName.Equals("Test", StringComparison.OrdinalIgnoreCase))
+// Skipped when the connection string is absent — avoids hard startup crash on missing config.
+var appInsightsConnectionString = builder.Configuration["ApplicationInsights:ConnectionString"]
+    ?? Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING");
+if (!builder.Environment.EnvironmentName.Equals("Test", StringComparison.OrdinalIgnoreCase)
+    && !string.IsNullOrEmpty(appInsightsConnectionString))
 {
     builder.Services.AddApplicationInsightsTelemetry();
 }
