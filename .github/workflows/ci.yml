@@ -50,9 +50,14 @@ jobs:
       - name: Publish
         run: dotnet publish src/WorkItems.Api/WorkItems.Api.csproj --configuration Release --output ./publish
 
+      - name: Zip publish output
+        # cd into the folder so DLLs land at the zip root, not inside a publish/ subdirectory.
+        # Azure App Service requires *.runtimeconfig.json to be at the root to detect the startup DLL.
+        run: cd publish && zip -r ../publish.zip .
+
       - name: Deploy to Azure App Service
         uses: azure/webapps-deploy@v3
         with:
           app-name: workitems-api
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: ./publish
+          package: ./publish.zip
