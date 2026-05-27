@@ -1,7 +1,7 @@
 # Work Items API
 
 [![CI](https://github.com/AdrienAmoroso/workitems-api/actions/workflows/ci.yml/badge.svg)](https://github.com/AdrienAmoroso/workitems-api/actions/workflows/ci.yml)
-[![Health](https://img.shields.io/website?label=health&url=https%3A%2F%2Fworkitems-api.onrender.com%2Fhealth)](https://workitems-api.onrender.com/health)
+[![Health](https://img.shields.io/website?label=health&url=https%3A%2F%2Fworkitems-api.azurewebsites.net%2Fhealth)](https://workitems-api.azurewebsites.net/health)
 ![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet)
 ![Angular](https://img.shields.io/badge/Angular-19-DD0031?logo=angular)
 ![License](https://img.shields.io/badge/License-MIT-green)
@@ -10,7 +10,7 @@ A full-stack **Work Items management system** (similar to Jira tickets) built wi
 
 ## Live Demo
 
-**Try the app:** [https://workitems-web.onrender.com](https://workitems-web.onrender.com)
+**Try the app:** [https://jolly-sky-013d4b103.7.azurestaticapps.net](https://jolly-sky-013d4b103.7.azurestaticapps.net)
 
 ## What This Project Demonstrates
 
