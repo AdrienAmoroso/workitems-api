@@ -206,10 +206,21 @@ if (!app.Environment.EnvironmentName.Equals("Test", StringComparison.OrdinalIgno
     {
         // For PostgreSQL: Use EnsureCreated to create tables with correct UUID types
         // This bypasses SQLite migrations which create TEXT columns for GUIDs
-        var dbCreated = dbContext.Database.EnsureCreated();
-        if (dbCreated)
+        try
         {
-            app.Logger.LogInformation("PostgreSQL database created with proper UUID columns");
+            var dbCreated = dbContext.Database.EnsureCreated();
+            if (dbCreated)
+            {
+                app.Logger.LogInformation("PostgreSQL database created with proper UUID columns");
+            }
+            else
+            {
+                app.Logger.LogInformation("PostgreSQL database already exists");
+            }
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogError(ex, "Failed to initialize PostgreSQL database on startup. The app will continue but may be unhealthy until the database is reachable.");
         }
     }
     else
@@ -219,7 +230,14 @@ if (!app.Environment.EnvironmentName.Equals("Test", StringComparison.OrdinalIgno
     }
 
     // Seed demo accounts (admin@demo.com + viewer@demo.com) — idempotent, safe on every boot
-    await DatabaseSeeder.SeedAsync(dbContext);
+    try
+    {
+        await DatabaseSeeder.SeedAsync(dbContext);
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(ex, "Failed to seed database on startup.");
+    }
 }
 
 // CORS must be first to handle preflight requests
