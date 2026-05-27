@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main, master]
 
+# Opt into Node.js 24 for all actions before the forced migration on June 2nd 2026.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest

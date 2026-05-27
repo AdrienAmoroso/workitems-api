@@ -61,8 +61,11 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 
 // Application Insights: telemetry (requests, exceptions, dependencies) sent to Azure Monitor.
 // Connection string is injected via APPLICATIONINSIGHTS_CONNECTION_STRING in Azure App Settings.
-// No-ops locally when the env var is absent.
-builder.Services.AddApplicationInsightsTelemetry();
+// Skipped in Test environment — the background telemetry worker breaks WebApplicationFactory.
+if (!builder.Environment.EnvironmentName.Equals("Test", StringComparison.OrdinalIgnoreCase))
+{
+    builder.Services.AddApplicationInsightsTelemetry();
+}
 
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var secretKey = jwtSettings["SecretKey"] ?? "TestSecretKeyForJWTThatIsAtLeast32CharactersLong123456";
