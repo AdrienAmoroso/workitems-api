@@ -9,6 +9,14 @@
 # dotenv files
 .env
 
+# Local Azure debug artifacts
+azure-logs*.zip
+azure-logs*-extract/
+*.log
+docker_last100.txt
+containerStream*.txt
+container_stream.log
+
 # User-specific files
 *.rsuser
 *.suo
