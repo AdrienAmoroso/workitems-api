@@ -23,12 +23,21 @@ builder.Host.UseSerilog((context, configuration) =>
 if (!builder.Environment.EnvironmentName.Equals("Test", StringComparison.OrdinalIgnoreCase))
 {
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-    
-    if (builder.Environment.IsProduction() && !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DATABASE_URL")))
+
+    if (builder.Environment.IsProduction())
     {
-        // Use PostgreSQL in production (Render provides DATABASE_URL in URI format)
-        var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL")!;
-        var npgsqlConnectionString = ConvertPostgresUrlToConnectionString(databaseUrl);
+        // Use PostgreSQL in production.
+        // Render provides DATABASE_URL in URI format; Azure provides the connection string directly.
+        string npgsqlConnectionString;
+        var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+        if (!string.IsNullOrEmpty(databaseUrl))
+        {
+            npgsqlConnectionString = ConvertPostgresUrlToConnectionString(databaseUrl);
+        }
+        else
+        {
+            npgsqlConnectionString = connectionString!;
+        }
         builder.Services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(npgsqlConnectionString)
                    .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)));
