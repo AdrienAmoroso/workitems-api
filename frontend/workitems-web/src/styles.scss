@@ -1,28 +1,87 @@
-// Include theming for Angular Material with `mat.theme()`.
-// This Sass mixin will define CSS variables that are used for styling Angular Material
-// components according to the Material 3 design spec.
-// Learn more about theming and how to use it for your application's
-// custom components at https://material.angular.dev/guide/theming
 @use '@angular/material' as mat;
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Design tokens
+// ─────────────────────────────────────────────────────────────────────────────
+:root {
+  // Surfaces
+  --color-bg: #09090d;
+  --color-surface: #111118;
+  --color-surface-2: #1a1a24;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-hover: rgba(255, 255, 255, 0.14);
+
+  // Accent — indigo-500
+  --color-accent: #6366f1;
+  --color-accent-dim: rgba(99, 102, 241, 0.15);
+  --color-accent-glow: rgba(99, 102, 241, 0.28);
+  --color-accent-text: #a5b4fc;
+
+  // Text scale
+  --color-text-primary: #f1f5f9;
+  --color-text-secondary: #94a3b8;
+  --color-text-muted: #475569;
+
+  // Status — dark-safe semantic colors
+  --color-status-todo: #818cf8;
+  --color-status-todo-bg: rgba(129, 140, 248, 0.12);
+  --color-status-todo-border: rgba(129, 140, 248, 0.25);
+  --color-status-progress: #fb923c;
+  --color-status-progress-bg: rgba(251, 146, 60, 0.12);
+  --color-status-progress-border: rgba(251, 146, 60, 0.25);
+  --color-status-done: #4ade80;
+  --color-status-done-bg: rgba(74, 222, 128, 0.12);
+  --color-status-done-border: rgba(74, 222, 128, 0.25);
+
+  // Priority — dark-safe semantic colors
+  --color-priority-low: #64748b;
+  --color-priority-low-bg: rgba(100, 116, 139, 0.12);
+  --color-priority-low-border: rgba(100, 116, 139, 0.25);
+  --color-priority-medium: #fbbf24;
+  --color-priority-medium-bg: rgba(251, 191, 36, 0.12);
+  --color-priority-medium-border: rgba(251, 191, 36, 0.25);
+  --color-priority-high: #f87171;
+  --color-priority-high-bg: rgba(248, 113, 113, 0.12);
+  --color-priority-high-border: rgba(248, 113, 113, 0.25);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Angular Material 3 — dark theme
+// color-scheme: dark tells Material 3 to use its dark system variable values.
+// We then pin the surface tokens to our near-black palette.
+// ─────────────────────────────────────────────────────────────────────────────
 html {
   height: 100%;
+  color-scheme: dark;
+
   @include mat.theme(
     (
       color: (
-        primary: mat.$cyan-palette,
+        primary: mat.$violet-palette,
       ),
       typography: 'Plus Jakarta Sans',
       density: 0,
     )
   );
+
+  // Override Material system surfaces with our custom near-black tokens
+  --mat-sys-background: var(--color-bg);
+  --mat-sys-surface: var(--color-surface);
+  --mat-sys-surface-container-lowest: var(--color-bg);
+  --mat-sys-surface-container-low: var(--color-surface);
+  --mat-sys-surface-container: var(--color-surface-2);
+  --mat-sys-surface-container-high: var(--color-surface-2);
+  --mat-sys-surface-container-highest: var(--color-surface-2);
+  --mat-sys-outline: var(--color-border);
+  --mat-sys-outline-variant: var(--color-border);
+  --mat-sys-on-background: var(--color-text-primary);
+  --mat-sys-on-surface: var(--color-text-primary);
+  --mat-sys-on-surface-variant: var(--color-text-secondary);
 }
 
 body {
-  color-scheme: light;
-  background-color: var(--mat-sys-surface);
-  color: var(--mat-sys-on-surface);
-  font: var(--mat-sys-body-medium);
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
   font-family: 'Plus Jakarta Sans', sans-serif;
   margin: 0;
   height: 100%;
@@ -32,4 +91,216 @@ body {
 *::before,
 *::after {
   box-sizing: border-box;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Cards
+// ─────────────────────────────────────────────────────────────────────────────
+.mat-mdc-card {
+  background-color: var(--color-surface) !important;
+  border: 1px solid var(--color-border) !important;
+  box-shadow: none !important;
+  border-radius: 12px !important;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Form fields — outlined variant
+// Using documented MDC CSS custom properties for reliable override
+// ─────────────────────────────────────────────────────────────────────────────
+.mat-mdc-form-field {
+  --mdc-outlined-text-field-outline-color: var(--color-border);
+  --mdc-outlined-text-field-hover-outline-color: var(--color-border-hover);
+  --mdc-outlined-text-field-focus-outline-color: var(--color-accent);
+  --mdc-outlined-text-field-label-text-color: var(--color-text-secondary);
+  --mdc-outlined-text-field-hover-label-text-color: var(--color-text-secondary);
+  --mdc-outlined-text-field-focus-label-text-color: var(--color-accent-text);
+  --mdc-outlined-text-field-input-text-color: var(--color-text-primary);
+  --mdc-outlined-text-field-caret-color: var(--color-accent);
+  --mdc-outlined-text-field-container-shape: 8px;
+  --mat-form-field-container-text-color: var(--color-text-primary);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Select dropdown
+// ─────────────────────────────────────────────────────────────────────────────
+.mat-mdc-select-panel {
+  background: var(--color-surface-2) !important;
+  border: 1px solid var(--color-border) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+}
+
+.mat-mdc-option.mdc-list-item--selected:not(.mdc-list-item--disabled) {
+  background: var(--color-accent-dim) !important;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Menu
+// ─────────────────────────────────────────────────────────────────────────────
+.mat-mdc-menu-panel {
+  background: var(--color-surface-2) !important;
+  border: 1px solid var(--color-border) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+  border-radius: 10px !important;
+}
+
+.mat-mdc-menu-item:hover:not([disabled]) {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Chips — base + semantic status / priority classes
+// Applied globally so both the list and the detail page inherit the same styles
+// ─────────────────────────────────────────────────────────────────────────────
+.mat-mdc-chip {
+  border-radius: 4px !important;
+  font-size: 0.72rem !important;
+  font-weight: 600 !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  letter-spacing: 0.03em !important;
+  height: 22px !important;
+  min-height: 22px !important;
+}
+
+.status-todo {
+  background-color: var(--color-status-todo-bg) !important;
+  color: var(--color-status-todo) !important;
+  border: 1px solid var(--color-status-todo-border) !important;
+}
+
+.status-inprogress {
+  background-color: var(--color-status-progress-bg) !important;
+  color: var(--color-status-progress) !important;
+  border: 1px solid var(--color-status-progress-border) !important;
+}
+
+.status-done {
+  background-color: var(--color-status-done-bg) !important;
+  color: var(--color-status-done) !important;
+  border: 1px solid var(--color-status-done-border) !important;
+}
+
+.priority-low {
+  background-color: var(--color-priority-low-bg) !important;
+  color: var(--color-priority-low) !important;
+  border: 1px solid var(--color-priority-low-border) !important;
+}
+
+.priority-medium {
+  background-color: var(--color-priority-medium-bg) !important;
+  color: var(--color-priority-medium) !important;
+  border: 1px solid var(--color-priority-medium-border) !important;
+}
+
+.priority-high {
+  background-color: var(--color-priority-high-bg) !important;
+  color: var(--color-priority-high) !important;
+  border: 1px solid var(--color-priority-high-border) !important;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Table
+// ─────────────────────────────────────────────────────────────────────────────
+.mat-mdc-table {
+  background: var(--color-surface) !important;
+
+  .mat-mdc-header-row {
+    background: var(--color-surface-2) !important;
+  }
+
+  .mat-mdc-header-cell {
+    color: var(--color-text-muted) !important;
+    font-size: 0.7rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.07em !important;
+    border-bottom: 1px solid var(--color-border) !important;
+  }
+
+  .mat-mdc-row {
+    border-bottom: 1px solid var(--color-border) !important;
+    transition: background-color 0.12s ease;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.025) !important;
+    }
+
+    &:last-child {
+      border-bottom: none !important;
+    }
+  }
+
+  .mat-mdc-cell {
+    color: var(--color-text-primary) !important;
+    border-bottom: 1px solid var(--color-border) !important;
+    font-size: 0.875rem !important;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Paginator
+// ─────────────────────────────────────────────────────────────────────────────
+.mat-mdc-paginator {
+  background: var(--color-surface-2) !important;
+  color: var(--color-text-secondary) !important;
+  border-top: 1px solid var(--color-border) !important;
+  border-radius: 0 0 12px 12px !important;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Snackbar
+// ─────────────────────────────────────────────────────────────────────────────
+.mat-mdc-snack-bar-container {
+  --mdc-snackbar-container-color: #1e1e2e;
+  --mdc-snackbar-supporting-text-color: var(--color-text-primary);
+  --mdc-snackbar-container-shape: 8px;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Dialog
+// ─────────────────────────────────────────────────────────────────────────────
+.mat-mdc-dialog-container {
+  --mdc-dialog-container-color: var(--color-surface);
+  --mdc-dialog-container-shape: 12px;
+}
+
+.mat-mdc-dialog-surface {
+  border: 1px solid var(--color-border) !important;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Scrollbar (Chrome / Edge)
+// ─────────────────────────────────────────────────────────────────────────────
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Reduced motion — accessibility guard
+// Collapses all transitions and animations to instant for users who opt out.
+// This single rule covers CSS transitions, animations, and Angular Animations
+// because Angular respects the transition-duration collapse.
+// ─────────────────────────────────────────────────────────────────────────────
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

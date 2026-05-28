@@ -12,11 +12,13 @@ import { NavbarComponent } from './shared/components/navbar/navbar.component';
       <router-outlet></router-outlet>
     </main>
   `,
-  styles: [`
-    main {
-      min-height: calc(100vh - 64px);
-      background-color: #fafafa;
-    }
-  `]
+  styles: [
+    `
+      main {
+        min-height: calc(100vh - 60px);
+        background-color: var(--color-bg);
+      }
+    `,
+  ],
 })
 export class App {}

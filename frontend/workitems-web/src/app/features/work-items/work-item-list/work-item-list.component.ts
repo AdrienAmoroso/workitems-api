@@ -1,3 +1,4 @@
+import { animate, style, transition, trigger } from '@angular/animations';
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -47,12 +48,20 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
     MatDialogModule,
     MatTooltipModule,
   ],
+  animations: [
+    trigger('rowAnimation', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateY(6px)' }),
+        animate('180ms ease', style({ opacity: 1, transform: 'translateY(0)' })),
+      ]),
+    ]),
+  ],
   template: `
     <div class="container">
       <div class="header">
         <h1>Work Items</h1>
         @if (authService.canManage()) {
-          <a mat-raised-button color="primary" routerLink="/work-items/create">
+          <a mat-flat-button class="new-item-btn" routerLink="/work-items/create">
             <mat-icon>add</mat-icon>
             New Work Item
           </a>
@@ -83,9 +92,9 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
               </mat-select>
             </mat-form-field>
 
-            <button mat-stroked-button (click)="resetFilters()">
+            <button mat-stroked-button class="clear-btn" (click)="resetFilters()">
               <mat-icon>clear</mat-icon>
-              Clear Filters
+              Clear
             </button>
           </div>
         </mat-card-content>
@@ -100,7 +109,7 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
 
       <!-- Table -->
       @if (!isLoading() && workItems().length > 0) {
-        <div class="table-container mat-elevation-z2">
+        <div class="table-container">
           <table mat-table [dataSource]="workItems()" matSort (matSortChange)="onSort($event)">
             <!-- Title Column -->
             <ng-container matColumnDef="title">
@@ -166,7 +175,7 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
             </ng-container>
 
             <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns" [@rowAnimation]></tr>
           </table>
 
           <mat-paginator
@@ -185,15 +194,15 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
       @if (!isLoading() && workItems().length === 0) {
         <mat-card class="empty-state">
           <mat-card-content>
-            <mat-icon>inbox</mat-icon>
+            <mat-icon class="empty-icon">inbox</mat-icon>
             <h2>No work items found</h2>
             <p>Create your first work item to get started.</p>
             @if (authService.canManage()) {
-              <a mat-raised-button color="primary" routerLink="/work-items/create">
+              <a mat-flat-button class="empty-cta" routerLink="/work-items/create">
                 Create Work Item
               </a>
             } @else {
-              <a mat-raised-button color="primary" routerLink="/auth/login"> Login to Create </a>
+              <a mat-flat-button class="empty-cta" routerLink="/auth/login">Login to Create</a>
             }
           </mat-card-content>
         </mat-card>
@@ -202,43 +211,105 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
   `,
   styles: [
     `
+      :host {
+        display: block;
+        animation: pageFadeIn 0.15s ease both;
+      }
+
+      @keyframes pageFadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(4px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
       .container {
-        padding: 24px;
+        padding: 32px 24px;
         max-width: 1200px;
         margin: 0 auto;
       }
 
+      /* ── Header ───────────────────────────────────────────────── */
       .header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 24px;
+        margin-bottom: 28px;
       }
 
+      .header h1 {
+        font-size: 1.625rem;
+        font-weight: 700;
+        color: var(--color-text-primary);
+        margin: 0;
+        letter-spacing: -0.03em;
+      }
+
+      .new-item-btn {
+        background-color: var(--color-accent) !important;
+        color: #fff !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+        font-size: 0.875rem !important;
+        box-shadow: 0 0 0 0 var(--color-accent-glow);
+        transition:
+          box-shadow 0.2s ease,
+          background-color 0.15s ease !important;
+      }
+
+      .new-item-btn:hover {
+        background-color: #5254cc !important;
+        box-shadow: 0 0 16px 0 var(--color-accent-glow) !important;
+      }
+
+      /* ── Filters ──────────────────────────────────────────────── */
       .filters-card {
-        margin-bottom: 24px;
+        margin-bottom: 20px;
+        background: var(--color-surface-2) !important;
+        border: 1px solid var(--color-border) !important;
+        border-radius: 12px !important;
+        box-shadow: none !important;
       }
 
       .filters {
         display: flex;
-        gap: 16px;
+        gap: 12px;
         flex-wrap: wrap;
         align-items: center;
+        padding: 4px 0;
       }
 
       .filters mat-form-field {
-        width: 150px;
+        width: 148px;
       }
 
+      .clear-btn {
+        color: var(--color-text-secondary) !important;
+        border-color: var(--color-border) !important;
+        border-radius: 7px !important;
+        font-size: 0.8125rem !important;
+      }
+
+      .clear-btn:hover {
+        background-color: rgba(255, 255, 255, 0.04) !important;
+      }
+
+      /* ── Loading ──────────────────────────────────────────────── */
       .loading-container {
         display: flex;
         justify-content: center;
-        padding: 48px;
+        padding: 64px;
       }
 
+      /* ── Table ────────────────────────────────────────────────── */
       .table-container {
         overflow-x: auto;
-        border-radius: 4px;
+        border-radius: 12px;
+        border: 1px solid var(--color-border);
       }
 
       table {
@@ -246,66 +317,53 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
       }
 
       .title-link {
-        color: inherit;
+        color: var(--color-text-primary);
         text-decoration: none;
         font-weight: 500;
+        transition: color 0.15s ease;
       }
 
       .title-link:hover {
-        text-decoration: underline;
+        color: var(--color-accent-text);
       }
 
-      .status-todo {
-        background-color: #eef2ff !important;
-        color: #4338ca !important;
-        font-weight: 600 !important;
-      }
-      .status-inprogress {
-        background-color: #fff7ed !important;
-        color: #c2410c !important;
-        font-weight: 600 !important;
-      }
-      .status-done {
-        background-color: #f0fdf4 !important;
-        color: #15803d !important;
-        font-weight: 600 !important;
-      }
-
-      .priority-low {
-        background-color: #f8fafc !important;
-        color: #475569 !important;
-        font-weight: 600 !important;
-      }
-      .priority-medium {
-        background-color: #fffbeb !important;
-        color: #b45309 !important;
-        font-weight: 600 !important;
-      }
-      .priority-high {
-        background-color: #fff1f2 !important;
-        color: #be123c !important;
-        font-weight: 600 !important;
-      }
-
+      /* ── Empty state ──────────────────────────────────────────── */
       .empty-state {
         text-align: center;
-        padding: 48px;
+        padding: 64px 48px !important;
+        background: var(--color-surface) !important;
+        border: 1px solid var(--color-border) !important;
+        border-radius: 16px !important;
+        box-shadow: none !important;
       }
 
-      .empty-state mat-icon {
-        font-size: 64px;
-        width: 64px;
-        height: 64px;
-        color: #9e9e9e;
+      .empty-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+        color: var(--color-text-muted);
+        margin-bottom: 16px;
       }
 
       .empty-state h2 {
-        margin: 16px 0 8px;
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--color-text-primary);
+        margin: 0 0 8px;
+        letter-spacing: -0.01em;
       }
 
       .empty-state p {
-        color: #757575;
+        color: var(--color-text-secondary);
+        font-size: 0.875rem;
         margin-bottom: 24px;
+      }
+
+      .empty-cta {
+        background-color: var(--color-accent) !important;
+        color: #fff !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
       }
     `,
   ],
