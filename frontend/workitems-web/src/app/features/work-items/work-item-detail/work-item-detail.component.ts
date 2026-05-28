@@ -36,7 +36,6 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
 
       @if (!isLoading() && workItem()) {
         <div class="detail-layout">
-
           <!-- Back link -->
           <a mat-button routerLink="/work-items" class="back-link">
             <mat-icon>arrow_back</mat-icon>
@@ -47,9 +46,8 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
             <mat-card-header>
               <mat-card-title class="item-title">{{ workItem()!.title }}</mat-card-title>
               <mat-card-subtitle class="item-meta">
-                Created {{ workItem()!.createdAt | date: 'mediumDate' }}
-                &nbsp;·&nbsp;
-                Updated {{ workItem()!.updatedAt | date: 'mediumDate' }}
+                Created {{ workItem()!.createdAt | date: 'mediumDate' }} &nbsp;·&nbsp; Updated
+                {{ workItem()!.updatedAt | date: 'mediumDate' }}
               </mat-card-subtitle>
             </mat-card-header>
 
@@ -65,7 +63,9 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
 
               <div class="description">
                 <p class="description-label">Description</p>
-                <p class="description-body">{{ workItem()!.description || 'No description provided.' }}</p>
+                <p class="description-body">
+                  {{ workItem()!.description || 'No description provided.' }}
+                </p>
               </div>
             </mat-card-content>
 
@@ -103,178 +103,191 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
       }
     </div>
   `,
-  styles: [`
-    :host {
-      display: block;
-      animation: pageFadeIn 0.15s ease both;
-    }
+  styles: [
+    `
+      :host {
+        display: block;
+        animation: pageFadeIn 0.15s ease both;
+      }
 
-    @keyframes pageFadeIn {
-      from { opacity: 0; transform: translateY(4px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
+      @keyframes pageFadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(4px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
 
-    .container {
-      padding: 32px 24px;
-      max-width: 760px;
-      margin: 0 auto;
-    }
+      .container {
+        padding: 32px 24px;
+        max-width: 760px;
+        margin: 0 auto;
+      }
 
-    /* ── Layout ───────────────────────────────────────────────── */
-    .detail-layout {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
+      /* ── Layout ───────────────────────────────────────────────── */
+      .detail-layout {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
 
-    .back-link {
-      align-self: flex-start;
-      color: var(--color-text-secondary) !important;
-      font-size: 0.875rem !important;
-      font-weight: 500 !important;
-      border-radius: 6px !important;
-      padding: 0 8px !important;
-      transition: color 0.15s ease !important;
-    }
+      .back-link {
+        align-self: flex-start;
+        color: var(--color-text-secondary) !important;
+        font-size: 0.875rem !important;
+        font-weight: 500 !important;
+        border-radius: 6px !important;
+        padding: 0 8px !important;
+        transition: color 0.15s ease !important;
+      }
 
-    .back-link:hover {
-      color: var(--color-text-primary) !important;
-      background-color: rgba(255, 255, 255, 0.05) !important;
-    }
+      .back-link:hover {
+        color: var(--color-text-primary) !important;
+        background-color: rgba(255, 255, 255, 0.05) !important;
+      }
 
-    /* ── Card ─────────────────────────────────────────────────── */
-    .detail-card {
-      border-radius: 14px !important;
-      border: 1px solid var(--color-border) !important;
-      box-shadow: none !important;
-    }
+      /* ── Card ─────────────────────────────────────────────────── */
+      .detail-card {
+        border-radius: 14px !important;
+        border: 1px solid var(--color-border) !important;
+        box-shadow: none !important;
+      }
 
-    .item-title {
-      font-size: 1.375rem !important;
-      font-weight: 700 !important;
-      color: var(--color-text-primary) !important;
-      letter-spacing: -0.02em !important;
-      line-height: 1.3 !important;
-      margin-bottom: 6px !important;
-    }
+      .item-title {
+        font-size: 1.375rem !important;
+        font-weight: 700 !important;
+        color: var(--color-text-primary) !important;
+        letter-spacing: -0.02em !important;
+        line-height: 1.3 !important;
+        margin-bottom: 6px !important;
+      }
 
-    .item-meta {
-      font-size: 0.8125rem !important;
-      color: var(--color-text-muted) !important;
-    }
+      .item-meta {
+        font-size: 0.8125rem !important;
+        color: var(--color-text-muted) !important;
+      }
 
-    /* ── Chips ────────────────────────────────────────────────── */
-    .chips {
-      display: flex;
-      gap: 8px;
-      margin: 8px 0 24px;
-      flex-wrap: wrap;
-    }
+      /* ── Chips ────────────────────────────────────────────────── */
+      .chips {
+        display: flex;
+        gap: 8px;
+        margin: 8px 0 24px;
+        flex-wrap: wrap;
+      }
 
-    /* ── Description ──────────────────────────────────────────── */
-    .description {
-      padding-top: 20px;
-      border-top: 1px solid var(--color-border);
-    }
+      /* ── Description ──────────────────────────────────────────── */
+      .description {
+        padding-top: 20px;
+        border-top: 1px solid var(--color-border);
+      }
 
-    .description-label {
-      font-size: 0.7rem;
-      font-weight: 700;
-      color: var(--color-text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.07em;
-      margin: 0 0 10px;
-    }
+      .description-label {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: var(--color-text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        margin: 0 0 10px;
+      }
 
-    .description-body {
-      font-size: 0.9375rem;
-      color: var(--color-text-secondary);
-      white-space: pre-wrap;
-      line-height: 1.7;
-      margin: 0;
-    }
+      .description-body {
+        font-size: 0.9375rem;
+        color: var(--color-text-secondary);
+        white-space: pre-wrap;
+        line-height: 1.7;
+        margin: 0;
+      }
 
-    /* ── Actions ──────────────────────────────────────────────── */
-    .card-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-      padding: 12px 16px !important;
-      border-top: 1px solid var(--color-border);
-    }
+      /* ── Actions ──────────────────────────────────────────────── */
+      .card-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        padding: 12px 16px !important;
+        border-top: 1px solid var(--color-border);
+      }
 
-    .edit-btn {
-      background-color: var(--color-accent) !important;
-      color: #fff !important;
-      border-radius: 7px !important;
-      font-weight: 600 !important;
-      font-size: 0.875rem !important;
-      box-shadow: 0 0 0 0 var(--color-accent-glow);
-      transition: box-shadow 0.2s ease, background-color 0.15s ease !important;
-    }
+      .edit-btn {
+        background-color: var(--color-accent) !important;
+        color: #fff !important;
+        border-radius: 7px !important;
+        font-weight: 600 !important;
+        font-size: 0.875rem !important;
+        box-shadow: 0 0 0 0 var(--color-accent-glow);
+        transition:
+          box-shadow 0.2s ease,
+          background-color 0.15s ease !important;
+      }
 
-    .edit-btn:hover {
-      background-color: #5254cc !important;
-      box-shadow: 0 0 14px 0 var(--color-accent-glow) !important;
-    }
+      .edit-btn:hover {
+        background-color: #5254cc !important;
+        box-shadow: 0 0 14px 0 var(--color-accent-glow) !important;
+      }
 
-    .delete-btn {
-      border-color: rgba(248, 113, 113, 0.3) !important;
-      color: #f87171 !important;
-      border-radius: 7px !important;
-      font-size: 0.875rem !important;
-      transition: background-color 0.15s ease, border-color 0.15s ease !important;
-    }
+      .delete-btn {
+        border-color: rgba(248, 113, 113, 0.3) !important;
+        color: #f87171 !important;
+        border-radius: 7px !important;
+        font-size: 0.875rem !important;
+        transition:
+          background-color 0.15s ease,
+          border-color 0.15s ease !important;
+      }
 
-    .delete-btn:hover {
-      background-color: rgba(248, 113, 113, 0.08) !important;
-      border-color: rgba(248, 113, 113, 0.5) !important;
-    }
+      .delete-btn:hover {
+        background-color: rgba(248, 113, 113, 0.08) !important;
+        border-color: rgba(248, 113, 113, 0.5) !important;
+      }
 
-    /* ── Loading ──────────────────────────────────────────────── */
-    .loading-container {
-      display: flex;
-      justify-content: center;
-      padding: 64px;
-    }
+      /* ── Loading ──────────────────────────────────────────────── */
+      .loading-container {
+        display: flex;
+        justify-content: center;
+        padding: 64px;
+      }
 
-    /* ── Not-found ────────────────────────────────────────────── */
-    .not-found {
-      text-align: center;
-      padding: 64px 48px !important;
-      border: 1px solid var(--color-border) !important;
-      border-radius: 16px !important;
-      box-shadow: none !important;
-    }
+      /* ── Not-found ────────────────────────────────────────────── */
+      .not-found {
+        text-align: center;
+        padding: 64px 48px !important;
+        border: 1px solid var(--color-border) !important;
+        border-radius: 16px !important;
+        box-shadow: none !important;
+      }
 
-    .not-found-icon {
-      font-size: 48px;
-      width: 48px;
-      height: 48px;
-      color: #f87171;
-      margin-bottom: 16px;
-    }
+      .not-found-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+        color: #f87171;
+        margin-bottom: 16px;
+      }
 
-    .not-found h2 {
-      font-size: 1.125rem;
-      font-weight: 600;
-      color: var(--color-text-primary);
-      margin: 0 0 8px;
-    }
+      .not-found h2 {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--color-text-primary);
+        margin: 0 0 8px;
+      }
 
-    .not-found p {
-      color: var(--color-text-secondary);
-      font-size: 0.875rem;
-      margin-bottom: 24px;
-    }
+      .not-found p {
+        color: var(--color-text-secondary);
+        font-size: 0.875rem;
+        margin-bottom: 24px;
+      }
 
-    .back-btn {
-      background-color: var(--color-accent) !important;
-      color: #fff !important;
-      border-radius: 8px !important;
-      font-weight: 600 !important;
-    }
-  `],
+      .back-btn {
+        background-color: var(--color-accent) !important;
+        color: #fff !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+      }
+    `,
+  ],
+})
 export class WorkItemDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);

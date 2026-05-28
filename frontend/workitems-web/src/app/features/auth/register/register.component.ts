@@ -140,7 +140,7 @@ import { AuthService } from '../../../core/services';
               @if (isLoading) {
                 <mat-spinner diameter="18"></mat-spinner>
               } @else {
-                Create account
+                <ng-container>Create account</ng-container>
                 <mat-icon class="btn-arrow">arrow_forward</mat-icon>
               }
             </button>

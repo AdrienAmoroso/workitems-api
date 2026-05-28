@@ -114,7 +114,7 @@ import { AuthService, SignalRService } from '../../../core/services';
               @if (isLoading) {
                 <mat-spinner diameter="18"></mat-spinner>
               } @else {
-                Sign in
+                <ng-container>Sign in</ng-container>
                 <mat-icon class="btn-arrow">arrow_forward</mat-icon>
               }
             </button>
