@@ -1,14 +1,14 @@
-import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Router, RouterLink, ActivatedRoute } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { AuthService } from '../../../core/services';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { AuthService, SignalRService } from '../../../core/services';
 
 @Component({
   selector: 'app-login',
@@ -22,7 +22,7 @@ import { AuthService } from '../../../core/services';
     MatInputModule,
     MatButtonModule,
     MatProgressSpinnerModule,
-    MatSnackBarModule
+    MatSnackBarModule,
   ],
   template: `
     <div class="auth-container">
@@ -36,21 +36,42 @@ import { AuthService } from '../../../core/services';
           <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Username or Email</mat-label>
-              <input matInput formControlName="usernameOrEmail" placeholder="Enter username or email">
-              @if (loginForm.get('usernameOrEmail')?.hasError('required') && loginForm.get('usernameOrEmail')?.touched) {
+              <input
+                matInput
+                formControlName="usernameOrEmail"
+                placeholder="Enter username or email"
+              />
+              @if (
+                loginForm.get('usernameOrEmail')?.hasError('required') &&
+                loginForm.get('usernameOrEmail')?.touched
+              ) {
                 <mat-error>Username or email is required</mat-error>
               }
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Password</mat-label>
-              <input matInput type="password" formControlName="password" placeholder="Enter password">
-              @if (loginForm.get('password')?.hasError('required') && loginForm.get('password')?.touched) {
+              <input
+                matInput
+                type="password"
+                formControlName="password"
+                placeholder="Enter password"
+              />
+              @if (
+                loginForm.get('password')?.hasError('required') &&
+                loginForm.get('password')?.touched
+              ) {
                 <mat-error>Password is required</mat-error>
               }
             </mat-form-field>
 
-            <button mat-raised-button color="primary" type="submit" class="full-width" [disabled]="isLoading || loginForm.invalid">
+            <button
+              mat-raised-button
+              color="primary"
+              type="submit"
+              class="full-width"
+              [disabled]="isLoading || loginForm.invalid"
+            >
               @if (isLoading) {
                 <mat-spinner diameter="20"></mat-spinner>
               } @else {
@@ -67,49 +88,52 @@ import { AuthService } from '../../../core/services';
       </mat-card>
     </div>
   `,
-  styles: [`
-    .auth-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: calc(100vh - 64px);
-      padding: 16px;
-    }
+  styles: [
+    `
+      .auth-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: calc(100vh - 64px);
+        padding: 16px;
+      }
 
-    .auth-card {
-      width: 100%;
-      max-width: 400px;
-    }
+      .auth-card {
+        width: 100%;
+        max-width: 400px;
+      }
 
-    .full-width {
-      width: 100%;
-    }
+      .full-width {
+        width: 100%;
+      }
 
-    mat-form-field {
-      margin-bottom: 8px;
-    }
+      mat-form-field {
+        margin-bottom: 8px;
+      }
 
-    mat-card-actions {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+      mat-card-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
 
-    button mat-spinner {
-      display: inline-block;
-    }
-  `]
+      button mat-spinner {
+        display: inline-block;
+      }
+    `,
+  ],
 })
 export class LoginComponent {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
+  private signalRService = inject(SignalRService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private snackBar = inject(MatSnackBar);
 
   loginForm: FormGroup = this.fb.group({
     usernameOrEmail: ['', Validators.required],
-    password: ['', Validators.required]
+    password: ['', Validators.required],
   });
 
   isLoading = false;
@@ -120,6 +144,7 @@ export class LoginComponent {
     this.isLoading = true;
     this.authService.login(this.loginForm.value).subscribe({
       next: () => {
+        this.signalRService.startConnection();
         this.snackBar.open('Login successful!', 'Close', { duration: 3000 });
         const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/work-items';
         this.router.navigateByUrl(returnUrl);
@@ -128,7 +153,7 @@ export class LoginComponent {
         this.isLoading = false;
         const message = error.error?.message || 'Login failed. Please check your credentials.';
         this.snackBar.open(message, 'Close', { duration: 5000 });
-      }
+      },
     });
   }
 }

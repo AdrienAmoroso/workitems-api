@@ -1,11 +1,11 @@
-import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, RouterLinkActive } from '@angular/router';
-import { MatToolbarModule } from '@angular/material/toolbar';
+import { Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
-import { AuthService } from '../../../core/services';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { RouterLink, RouterLinkActive } from '@angular/router';
+import { AuthService, SignalRService } from '../../../core/services';
 
 @Component({
   selector: 'app-navbar',
@@ -17,7 +17,7 @@ import { AuthService } from '../../../core/services';
     MatToolbarModule,
     MatButtonModule,
     MatIconModule,
-    MatMenuModule
+    MatMenuModule,
   ],
   template: `
     <mat-toolbar color="primary">
@@ -52,48 +52,50 @@ import { AuthService } from '../../../core/services';
           <mat-icon>login</mat-icon>
           Login
         </a>
-        <a mat-stroked-button routerLink="/auth/register">
-          Register
-        </a>
+        <a mat-stroked-button routerLink="/auth/register"> Register </a>
       }
     </mat-toolbar>
   `,
-  styles: [`
-    mat-toolbar {
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-    }
+  styles: [
+    `
+      mat-toolbar {
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+      }
 
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: inherit;
-      text-decoration: none;
-      font-weight: 500;
-      font-size: 1.2rem;
-    }
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: inherit;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 1.2rem;
+      }
 
-    .spacer {
-      flex: 1 1 auto;
-    }
+      .spacer {
+        flex: 1 1 auto;
+      }
 
-    .nav-links {
-      display: flex;
-      gap: 8px;
-      margin-right: 16px;
-    }
+      .nav-links {
+        display: flex;
+        gap: 8px;
+        margin-right: 16px;
+      }
 
-    .nav-links a.active {
-      background-color: rgba(255, 255, 255, 0.15);
-    }
-  `]
+      .nav-links a.active {
+        background-color: rgba(255, 255, 255, 0.15);
+      }
+    `,
+  ],
 })
 export class NavbarComponent {
   authService = inject(AuthService);
+  private signalRService = inject(SignalRService);
 
   logout(): void {
+    this.signalRService.stopConnection();
     this.authService.logout();
   }
 }

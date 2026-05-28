@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -15,6 +15,7 @@ import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterLink } from '@angular/router';
+import { Subscription } from 'rxjs';
 import {
     PaginatedResult,
     WorkItem,
@@ -22,7 +23,7 @@ import {
     WorkItemPriority,
     WorkItemStatus,
 } from '../../../core/models';
-import { AuthService, WorkItemService } from '../../../core/services';
+import { AuthService, SignalRService, WorkItemService } from '../../../core/services';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
@@ -303,11 +304,13 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
     `,
   ],
 })
-export class WorkItemListComponent implements OnInit {
+export class WorkItemListComponent implements OnInit, OnDestroy {
   private workItemService = inject(WorkItemService);
+  private signalRService = inject(SignalRService);
   authService = inject(AuthService);
   private snackBar = inject(MatSnackBar);
   private dialog = inject(MatDialog);
+  private subscriptions = new Subscription();
 
   workItems = signal<WorkItem[]>([]);
   totalCount = signal(0);
@@ -328,6 +331,26 @@ export class WorkItemListComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadWorkItems();
+    this.subscriptions.add(
+      this.signalRService.onWorkItemCreated$.subscribe((item) =>
+        this.workItems.update((items) => [item, ...items]),
+      ),
+    );
+    this.subscriptions.add(
+      this.signalRService.onWorkItemUpdated$.subscribe((updated) =>
+        this.workItems.update((items) => items.map((i) => (i.id === updated.id ? updated : i))),
+      ),
+    );
+    this.subscriptions.add(
+      this.signalRService.onWorkItemDeleted$.subscribe((id) => {
+        this.workItems.update((items) => items.filter((i) => i.id !== id));
+        this.totalCount.update((n) => n - 1);
+      }),
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
   }
 
   loadWorkItems(): void {
