@@ -9,6 +9,7 @@ using WorkItems.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using WorkItems.Api.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -101,6 +102,20 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
         ClockSkew = TimeSpan.Zero
     };
+    // SignalR: WebSocket transport cannot send Authorization headers.
+    // Read the JWT from ?access_token= for hub connections only.
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var token = context.Request.Query["access_token"];
+            var path = context.HttpContext.Request.Path;
+            if (!string.IsNullOrEmpty(token) &&
+                path.StartsWithSegments("/hubs/workitems"))
+                context.Token = token;
+            return Task.CompletedTask;
+        }
+    };
 });
 
 builder.Services.AddAuthorization(options =>
@@ -120,6 +135,9 @@ builder.Services.AddControllers()
     {
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
+
+// SignalR: real-time work item change notifications over WebSockets.
+builder.Services.AddSignalR();
 
 // Health checks: /health (liveness) and /health/ready (readiness + DB probe)
 builder.Services.AddHealthChecks()
@@ -264,6 +282,7 @@ if (!app.Environment.IsProduction())
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<WorkItemsHub>("/hubs/workitems");
 
 // Liveness: fast ping, no external dependency check.
 // Readiness: includes the DB probe — tagged "ready" — used by load balancers before routing traffic.
