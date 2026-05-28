@@ -31,11 +31,13 @@
               {
                 "glob": "_redirects",
                 "input": "src"
+              },
+              {
+                "glob": "staticwebapp.config.json",
+                "input": "src"
               }
             ],
-            "styles": [
-              "src/styles.scss"
-            ]
+            "styles": ["src/styles.scss"]
           },
           "configurations": {
             "production": {

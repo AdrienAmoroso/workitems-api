@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
 import { Subject } from 'rxjs';
 import { environment } from '../../../environments/environment';
@@ -15,7 +15,10 @@ export class SignalRService {
   readonly onWorkItemUpdated$ = new Subject<WorkItem>();
   readonly onWorkItemDeleted$ = new Subject<string>();
 
-  constructor(private authService: AuthService) {
+  constructor(
+    private authService: AuthService,
+    private zone: NgZone,
+  ) {
     this.connection = new signalR.HubConnectionBuilder()
       .withUrl(environment.hubUrl, {
         accessTokenFactory: () => this.authService.getToken() ?? '',
@@ -23,9 +26,15 @@ export class SignalRService {
       .withAutomaticReconnect()
       .build();
 
-    this.connection.on('WorkItemCreated', (item: WorkItem) => this.onWorkItemCreated$.next(item));
-    this.connection.on('WorkItemUpdated', (item: WorkItem) => this.onWorkItemUpdated$.next(item));
-    this.connection.on('WorkItemDeleted', (id: string) => this.onWorkItemDeleted$.next(id));
+    this.connection.on('WorkItemCreated', (item: WorkItem) =>
+      this.zone.run(() => this.onWorkItemCreated$.next(item)),
+    );
+    this.connection.on('WorkItemUpdated', (item: WorkItem) =>
+      this.zone.run(() => this.onWorkItemUpdated$.next(item)),
+    );
+    this.connection.on('WorkItemDeleted', (id: string) =>
+      this.zone.run(() => this.onWorkItemDeleted$.next(id)),
+    );
   }
 
   async startConnection(): Promise<void> {
