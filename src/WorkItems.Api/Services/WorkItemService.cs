@@ -3,15 +3,19 @@ namespace WorkItems.Api.Services;
 using WorkItems.Api.Contracts.WorkItems;
 using WorkItems.Api.Data;
 using WorkItems.Api.Domain;
+using WorkItems.Api.Hubs;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 public class WorkItemService : IWorkItemService
 {
     private readonly AppDbContext _dbContext;
+    private readonly IHubContext<WorkItemsHub> _hubContext;
 
-    public WorkItemService(AppDbContext dbContext)
+    public WorkItemService(AppDbContext dbContext, IHubContext<WorkItemsHub> hubContext)
     {
         _dbContext = dbContext;
+        _hubContext = hubContext;
     }
 
     public async Task<WorkItemResponse> GetByIdAsync(Guid id)
@@ -78,7 +82,9 @@ public class WorkItemService : IWorkItemService
         _dbContext.WorkItems.Add(workItem);
         await _dbContext.SaveChangesAsync();
 
-        return WorkItemResponse.FromEntity(workItem);
+        var response = WorkItemResponse.FromEntity(workItem);
+        await _hubContext.Clients.All.SendAsync(WorkItemsHubEvents.WorkItemCreated, response);
+        return response;
     }
 
     public async Task<WorkItemResponse> UpdateAsync(Guid id, UpdateWorkItemRequest request)
@@ -97,7 +103,9 @@ public class WorkItemService : IWorkItemService
         _dbContext.WorkItems.Update(workItem);
         await _dbContext.SaveChangesAsync();
 
-        return WorkItemResponse.FromEntity(workItem);
+        var response = WorkItemResponse.FromEntity(workItem);
+        await _hubContext.Clients.All.SendAsync(WorkItemsHubEvents.WorkItemUpdated, response);
+        return response;
     }
 
     public async Task DeleteAsync(Guid id)
@@ -109,6 +117,7 @@ public class WorkItemService : IWorkItemService
 
         _dbContext.WorkItems.Remove(workItem);
         await _dbContext.SaveChangesAsync();
+        await _hubContext.Clients.All.SendAsync(WorkItemsHubEvents.WorkItemDeleted, id);
     }
 
     private static IQueryable<WorkItem> ApplySorting(
