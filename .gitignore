@@ -500,3 +500,5 @@ CLAUDE.md
 *docs/ai
 *publish-output
 *.zip
+*agents/
+skills-lock.json
