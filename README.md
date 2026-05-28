@@ -10,7 +10,7 @@ A full-stack **Work Items management system** (similar to Jira tickets) built wi
 
 ## Live Demo
 
-**Try the app:** [https://jolly-sky-013d4b103.7.azurestaticapps.net](https://jolly-sky-013d4b103.7.azurestaticapps.net)
+**Try the app:** [https://workitems.adrienamoroso.dev](https://workitems.adrienamoroso.dev)
 
 ## What This Project Demonstrates
 
