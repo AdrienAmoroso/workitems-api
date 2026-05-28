@@ -107,7 +107,9 @@ import { AuthService, SignalRService } from '../../../core/services';
         font-weight: 500;
         font-size: 0.875rem;
         border-radius: 6px !important;
-        transition: color 0.15s ease, background-color 0.15s ease;
+        transition:
+          color 0.15s ease,
+          background-color 0.15s ease;
       }
 
       .nav-link.nav-link-active {
@@ -190,5 +192,4 @@ export class NavbarComponent {
   getUserInitial(): string {
     return (this.authService.currentUser()?.username ?? 'U').charAt(0).toUpperCase();
   }
-}
 }

@@ -1,13 +1,13 @@
-import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
+import { Component, inject } from '@angular/core';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services';
 
 @Component({
@@ -22,7 +22,7 @@ import { AuthService } from '../../../core/services';
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
-    MatSnackBarModule
+    MatSnackBarModule,
   ],
   template: `
     <div class="auth-layout">
@@ -34,7 +34,8 @@ import { AuthService } from '../../../core/services';
             <span class="brand-name">Work Items</span>
           </div>
           <p class="brand-tagline">
-            Track your team's tasks in one place. Built as a .NET 10 and Angular 19 portfolio project.
+            Track your team's tasks in one place. Built as a .NET 10 and Angular 19 portfolio
+            project.
           </p>
           <ul class="brand-features">
             <li>
@@ -69,8 +70,16 @@ import { AuthService } from '../../../core/services';
           <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Username</mat-label>
-              <input matInput formControlName="username" placeholder="Choose a username" autocomplete="username">
-              @if (registerForm.get('username')?.hasError('required') && registerForm.get('username')?.touched) {
+              <input
+                matInput
+                formControlName="username"
+                placeholder="Choose a username"
+                autocomplete="username"
+              />
+              @if (
+                registerForm.get('username')?.hasError('required') &&
+                registerForm.get('username')?.touched
+              ) {
                 <mat-error>Username is required</mat-error>
               }
               @if (registerForm.get('username')?.hasError('minlength')) {
@@ -80,8 +89,17 @@ import { AuthService } from '../../../core/services';
 
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Email</mat-label>
-              <input matInput type="email" formControlName="email" placeholder="Enter your email" autocomplete="email">
-              @if (registerForm.get('email')?.hasError('required') && registerForm.get('email')?.touched) {
+              <input
+                matInput
+                type="email"
+                formControlName="email"
+                placeholder="Enter your email"
+                autocomplete="email"
+              />
+              @if (
+                registerForm.get('email')?.hasError('required') &&
+                registerForm.get('email')?.touched
+              ) {
                 <mat-error>Email is required</mat-error>
               }
               @if (registerForm.get('email')?.hasError('email')) {
@@ -91,8 +109,17 @@ import { AuthService } from '../../../core/services';
 
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Password</mat-label>
-              <input matInput type="password" formControlName="password" placeholder="Choose a password" autocomplete="new-password">
-              @if (registerForm.get('password')?.hasError('required') && registerForm.get('password')?.touched) {
+              <input
+                matInput
+                type="password"
+                formControlName="password"
+                placeholder="Choose a password"
+                autocomplete="new-password"
+              />
+              @if (
+                registerForm.get('password')?.hasError('required') &&
+                registerForm.get('password')?.touched
+              ) {
                 <mat-error>Password is required</mat-error>
               }
               @if (registerForm.get('password')?.hasError('minlength')) {
@@ -123,169 +150,171 @@ import { AuthService } from '../../../core/services';
       </div>
     </div>
   `,
-  styles: [`
-    .auth-layout {
-      display: flex;
-      min-height: calc(100dvh - 64px);
-    }
-
-    /* Left brand panel */
-    .brand-panel {
-      display: none;
-      flex: 1;
-      background-color: #0f172a;
-      padding: 48px;
-      align-items: center;
-      justify-content: center;
-    }
-
-    @media (min-width: 768px) {
-      .brand-panel {
+  styles: [
+    `
+      .auth-layout {
         display: flex;
+        min-height: calc(100dvh - 64px);
       }
-    }
 
-    .brand-content {
-      max-width: 380px;
-    }
+      /* Left brand panel */
+      .brand-panel {
+        display: none;
+        flex: 1;
+        background-color: #0f172a;
+        padding: 48px;
+        align-items: center;
+        justify-content: center;
+      }
 
-    .brand-logo {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 32px;
-    }
+      @media (min-width: 768px) {
+        .brand-panel {
+          display: flex;
+        }
+      }
 
-    .brand-icon {
-      font-size: 36px;
-      width: 36px;
-      height: 36px;
-      color: var(--mat-sys-primary);
-    }
+      .brand-content {
+        max-width: 380px;
+      }
 
-    .brand-name {
-      font-size: 1.75rem;
-      font-weight: 700;
-      color: #ffffff;
-      letter-spacing: -0.02em;
-    }
+      .brand-logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 32px;
+      }
 
-    .brand-tagline {
-      font-size: 1rem;
-      line-height: 1.6;
-      color: rgba(255, 255, 255, 0.6);
-      margin: 0 0 36px;
-    }
+      .brand-icon {
+        font-size: 36px;
+        width: 36px;
+        height: 36px;
+        color: var(--mat-sys-primary);
+      }
 
-    .brand-features {
-      list-style: none;
-      padding: 0;
-      margin: 0 0 36px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
+      .brand-name {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #ffffff;
+        letter-spacing: -0.02em;
+      }
 
-    .brand-features li {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 0.9rem;
-      color: rgba(255, 255, 255, 0.75);
-      font-weight: 500;
-    }
+      .brand-tagline {
+        font-size: 1rem;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.6);
+        margin: 0 0 36px;
+      }
 
-    .feature-icon {
-      font-size: 18px;
-      width: 18px;
-      height: 18px;
-      color: var(--mat-sys-primary);
-      flex-shrink: 0;
-    }
+      .brand-features {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 36px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
 
-    .brand-stack {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
+      .brand-features li {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.75);
+        font-weight: 500;
+      }
 
-    .stack-badge {
-      padding: 4px 10px;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      background-color: rgba(255, 255, 255, 0.08);
-      color: rgba(255, 255, 255, 0.55);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      letter-spacing: 0.01em;
-    }
+      .feature-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        color: var(--mat-sys-primary);
+        flex-shrink: 0;
+      }
 
-    /* Right form panel */
-    .form-panel {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 32px 24px;
-      background-color: #ffffff;
-    }
+      .brand-stack {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
 
-    .form-content {
-      width: 100%;
-      max-width: 380px;
-    }
+      .stack-badge {
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        background-color: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.55);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        letter-spacing: 0.01em;
+      }
 
-    .form-header {
-      margin-bottom: 28px;
-    }
+      /* Right form panel */
+      .form-panel {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 32px 24px;
+        background-color: #ffffff;
+      }
 
-    .form-title {
-      font-size: 1.625rem;
-      font-weight: 700;
-      color: #0f172a;
-      margin: 0 0 6px;
-      letter-spacing: -0.02em;
-    }
+      .form-content {
+        width: 100%;
+        max-width: 380px;
+      }
 
-    .form-subtitle {
-      font-size: 0.9rem;
-      color: #64748b;
-      margin: 0;
-    }
+      .form-header {
+        margin-bottom: 28px;
+      }
 
-    .full-width {
-      width: 100%;
-      margin-bottom: 4px;
-    }
+      .form-title {
+        font-size: 1.625rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0 0 6px;
+        letter-spacing: -0.02em;
+      }
 
-    .submit-btn {
-      margin-top: 8px;
-      height: 44px;
-      font-size: 0.9rem;
-      font-weight: 600;
-    }
+      .form-subtitle {
+        font-size: 0.9rem;
+        color: #64748b;
+        margin: 0;
+      }
 
-    .submit-btn mat-spinner {
-      display: inline-block;
-    }
+      .full-width {
+        width: 100%;
+        margin-bottom: 4px;
+      }
 
-    .form-footer {
-      margin-top: 20px;
-      font-size: 0.875rem;
-      color: #64748b;
-      text-align: center;
-    }
+      .submit-btn {
+        margin-top: 8px;
+        height: 44px;
+        font-size: 0.9rem;
+        font-weight: 600;
+      }
 
-    .form-link {
-      color: var(--mat-sys-primary);
-      text-decoration: none;
-      font-weight: 600;
-    }
+      .submit-btn mat-spinner {
+        display: inline-block;
+      }
 
-    .form-link:hover {
-      text-decoration: underline;
-    }
-  `]
+      .form-footer {
+        margin-top: 20px;
+        font-size: 0.875rem;
+        color: #64748b;
+        text-align: center;
+      }
+
+      .form-link {
+        color: var(--mat-sys-primary);
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      .form-link:hover {
+        text-decoration: underline;
+      }
+    `,
+  ],
 })
 export class RegisterComponent {
   private fb = inject(FormBuilder);
@@ -296,7 +325,7 @@ export class RegisterComponent {
   registerForm: FormGroup = this.fb.group({
     username: ['', [Validators.required, Validators.minLength(3)]],
     email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(6)]]
+    password: ['', [Validators.required, Validators.minLength(6)]],
   });
 
   isLoading = false;
@@ -314,16 +343,7 @@ export class RegisterComponent {
         this.isLoading = false;
         const message = error.error?.message || 'Registration failed. Please try again.';
         this.snackBar.open(message, 'Close', { duration: 5000 });
-      }
-    });
-  }
-}
       },
-      error: (error) => {
-        this.isLoading = false;
-        const message = error.error?.message || 'Registration failed. Please try again.';
-        this.snackBar.open(message, 'Close', { duration: 5000 });
-      }
     });
   }
 }
