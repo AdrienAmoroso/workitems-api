@@ -137,7 +137,13 @@ builder.Services.AddControllers()
     });
 
 // SignalR: real-time work item change notifications over WebSockets.
-builder.Services.AddSignalR();
+// AddJsonProtocol mirrors the controllers' JSON options: camelCase properties + string enums.
+builder.Services.AddSignalR()
+    .AddJsonProtocol(options =>
+    {
+        options.PayloadSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+        options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 
 // Health checks: /health (liveness) and /health/ready (readiness + DB probe)
 builder.Services.AddHealthChecks()
