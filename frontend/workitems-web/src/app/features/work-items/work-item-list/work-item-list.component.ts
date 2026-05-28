@@ -256,29 +256,35 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
       }
 
       .status-todo {
-        background-color: #e3f2fd !important;
-        color: #1976d2 !important;
+        background-color: #eef2ff !important;
+        color: #4338ca !important;
+        font-weight: 600 !important;
       }
       .status-inprogress {
-        background-color: #fff3e0 !important;
-        color: #f57c00 !important;
+        background-color: #fff7ed !important;
+        color: #c2410c !important;
+        font-weight: 600 !important;
       }
       .status-done {
-        background-color: #e8f5e9 !important;
-        color: #388e3c !important;
+        background-color: #f0fdf4 !important;
+        color: #15803d !important;
+        font-weight: 600 !important;
       }
 
       .priority-low {
-        background-color: #f5f5f5 !important;
-        color: #757575 !important;
+        background-color: #f8fafc !important;
+        color: #475569 !important;
+        font-weight: 600 !important;
       }
       .priority-medium {
-        background-color: #fff8e1 !important;
-        color: #ffa000 !important;
+        background-color: #fffbeb !important;
+        color: #b45309 !important;
+        font-weight: 600 !important;
       }
       .priority-high {
-        background-color: #ffebee !important;
-        color: #d32f2f !important;
+        background-color: #fff1f2 !important;
+        color: #be123c !important;
+        font-weight: 600 !important;
       }
 
       .empty-state {
