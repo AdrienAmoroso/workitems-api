@@ -26,6 +26,11 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Priority).IsRequired();
             entity.Property(e => e.CreatedAt).IsRequired();
             entity.Property(e => e.UpdatedAt).IsRequired();
+            // Indexes on frequently-filtered and sorted columns to avoid full-table scans
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.Priority);
+            entity.HasIndex(e => e.CreatedAt);
+            entity.HasIndex(e => e.UpdatedAt);
         });
 
         modelBuilder.Entity<User>(entity =>

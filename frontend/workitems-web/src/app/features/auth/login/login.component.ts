@@ -46,7 +46,7 @@ import { AuthService, SignalRService } from '../../../core/services';
             </li>
             <li>
               <span class="feature-dot feature-dot-orange"></span>
-              Role-based access â€” Admin, Member, Viewer
+              Role-based access” Admin, Member, Viewer
             </li>
             <li>
               <span class="feature-dot feature-dot-green"></span>

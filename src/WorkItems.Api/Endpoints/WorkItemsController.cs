@@ -67,7 +67,7 @@ public class WorkItemsController : ControllerBase
     /// </summary>
     /// <remarks>Requires role: **Member** or **Admin** (policy: CanManageWorkItems).</remarks>
     [HttpPost]
-    [Authorize(Policy = "CanManageWorkItems")]
+    [Authorize(Policy = AuthorizationPolicies.CanManageWorkItems)]
     [ProducesResponseType(typeof(WorkItemResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -86,7 +86,7 @@ public class WorkItemsController : ControllerBase
     /// </summary>
     /// <remarks>Requires role: **Member** or **Admin** (policy: CanManageWorkItems).</remarks>
     [HttpPut("{id:guid}")]
-    [Authorize(Policy = "CanManageWorkItems")]
+    [Authorize(Policy = AuthorizationPolicies.CanManageWorkItems)]
     [ProducesResponseType(typeof(WorkItemResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -113,7 +113,7 @@ public class WorkItemsController : ControllerBase
     /// </summary>
     /// <remarks>Requires role: **Admin** only (policy: CanDeleteWorkItems).</remarks>
     [HttpDelete("{id:guid}")]
-    [Authorize(Policy = "CanDeleteWorkItems")]
+    [Authorize(Policy = AuthorizationPolicies.CanDeleteWorkItems)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

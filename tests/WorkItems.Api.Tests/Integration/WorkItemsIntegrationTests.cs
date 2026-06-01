@@ -299,6 +299,87 @@ public class WorkItemsIntegrationTests : IClassFixture<WorkItemsWebApplicationFa
         Assert.Equal(1, result.Page);
     }
 
+    // ── Validation boundaries ─────────────────────────────────────────────────
+
+    [Fact]
+    public async Task CreateWorkItem_EmptyTitle_ReturnsBadRequest()
+    {
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", JwtTestHelper.CreateToken("Member"));
+
+        var response = await client.PostAsJsonAsync("/api/work-items", new CreateWorkItemRequest
+        {
+            Title    = "",
+            Priority = Domain.WorkItemPriority.Medium
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CreateWorkItem_TitleExceedsMaxLength_ReturnsBadRequest()
+    {
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", JwtTestHelper.CreateToken("Member"));
+
+        var response = await client.PostAsJsonAsync("/api/work-items", new CreateWorkItemRequest
+        {
+            Title    = new string('x', 256), // max is 255
+            Priority = Domain.WorkItemPriority.Medium
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CreateWorkItem_DescriptionExceedsMaxLength_ReturnsBadRequest()
+    {
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", JwtTestHelper.CreateToken("Member"));
+
+        var response = await client.PostAsJsonAsync("/api/work-items", new CreateWorkItemRequest
+        {
+            Title       = "Valid title",
+            Description = new string('x', 2001), // max is 2000
+            Priority    = Domain.WorkItemPriority.Medium
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    // ── Pagination boundaries ─────────────────────────────────────────────────
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public async Task GetAllWorkItems_InvalidPage_ClampedToFirstPage(int page)
+    {
+        var client   = _factory.CreateClient();
+        var response = await client.GetAsync($"/api/work-items?page={page}");
+
+        response.EnsureSuccessStatusCode();
+        var result = await response.Content.ReadFromJsonAsync<PaginatedResult<WorkItemResponse>>(JsonOptions);
+        Assert.NotNull(result);
+        Assert.Equal(1, result.Page);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(101)]
+    public async Task GetAllWorkItems_InvalidPageSize_ClampedToDefault(int pageSize)
+    {
+        var client   = _factory.CreateClient();
+        var response = await client.GetAsync($"/api/work-items?pageSize={pageSize}");
+
+        response.EnsureSuccessStatusCode();
+        var result = await response.Content.ReadFromJsonAsync<PaginatedResult<WorkItemResponse>>(JsonOptions);
+        Assert.NotNull(result);
+        Assert.Equal(10, result.PageSize);
+    }
+
     private async Task<string> RegisterAndGetTokenAsync(HttpClient client)
     {
         var registerRequest = new RegisterRequest

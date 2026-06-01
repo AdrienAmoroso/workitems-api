@@ -11,11 +11,13 @@ public class WorkItemService : IWorkItemService
 {
     private readonly AppDbContext _dbContext;
     private readonly IHubContext<WorkItemsHub> _hubContext;
+    private readonly ILogger<WorkItemService> _logger;
 
-    public WorkItemService(AppDbContext dbContext, IHubContext<WorkItemsHub> hubContext)
+    public WorkItemService(AppDbContext dbContext, IHubContext<WorkItemsHub> hubContext, ILogger<WorkItemService> logger)
     {
         _dbContext = dbContext;
         _hubContext = hubContext;
+        _logger = logger;
     }
 
     public async Task<WorkItemResponse> GetByIdAsync(Guid id)
@@ -82,6 +84,8 @@ public class WorkItemService : IWorkItemService
         _dbContext.WorkItems.Add(workItem);
         await _dbContext.SaveChangesAsync();
 
+        _logger.LogInformation("Work item created: {WorkItemId} — \"{Title}\"", workItem.Id, workItem.Title);
+
         var response = WorkItemResponse.FromEntity(workItem);
         await _hubContext.Clients.All.SendAsync(WorkItemsHubEvents.WorkItemCreated, response);
         return response;
@@ -103,6 +107,8 @@ public class WorkItemService : IWorkItemService
         _dbContext.WorkItems.Update(workItem);
         await _dbContext.SaveChangesAsync();
 
+        _logger.LogInformation("Work item updated: {WorkItemId} — \"{Title}\"", workItem.Id, workItem.Title);
+
         var response = WorkItemResponse.FromEntity(workItem);
         await _hubContext.Clients.All.SendAsync(WorkItemsHubEvents.WorkItemUpdated, response);
         return response;
@@ -117,6 +123,9 @@ public class WorkItemService : IWorkItemService
 
         _dbContext.WorkItems.Remove(workItem);
         await _dbContext.SaveChangesAsync();
+
+        _logger.LogInformation("Work item deleted: {WorkItemId} — \"{Title}\"", workItem.Id, workItem.Title);
+
         await _hubContext.Clients.All.SendAsync(WorkItemsHubEvents.WorkItemDeleted, id);
     }
 

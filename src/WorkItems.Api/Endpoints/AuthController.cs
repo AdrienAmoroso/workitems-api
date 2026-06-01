@@ -3,6 +3,7 @@ namespace WorkItems.Api.Endpoints;
 using WorkItems.Api.Contracts.Auth;
 using WorkItems.Api.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 [ApiController]
 [Route("api/auth")]
@@ -26,8 +27,10 @@ public class AuthController : ControllerBase
     /// - Maximum 100 characters
     /// </remarks>
     [HttpPost("register")]
+    [EnableRateLimiting("Auth")]
     [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<ActionResult<AuthResponse>> Register([FromBody] RegisterRequest request)
     {
         if (!ModelState.IsValid)
@@ -55,9 +58,11 @@ public class AuthController : ControllerBase
     /// Authorization: Bearer {token}
     /// </remarks>
     [HttpPost("login")]
+    [EnableRateLimiting("Auth")]
     [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<ActionResult<AuthResponse>> Login([FromBody] LoginRequest request)
     {
         if (!ModelState.IsValid)

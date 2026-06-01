@@ -14,20 +14,28 @@ public class AuthService : IAuthService
 {
     private readonly AppDbContext _dbContext;
     private readonly IConfiguration _configuration;
+    private readonly ILogger<AuthService> _logger;
 
-    public AuthService(AppDbContext dbContext, IConfiguration configuration)
+    public AuthService(AppDbContext dbContext, IConfiguration configuration, ILogger<AuthService> logger)
     {
         _dbContext = dbContext;
         _configuration = configuration;
+        _logger = logger;
     }
 
     public async Task<AuthResponse> RegisterAsync(string username, string email, string password)
     {
         if (await _dbContext.Users.AnyAsync(u => u.Username == username))
+        {
+            _logger.LogWarning("Registration rejected: username {Username} already exists", username);
             throw new InvalidOperationException("Username already exists");
+        }
 
         if (await _dbContext.Users.AnyAsync(u => u.Email == email))
+        {
+            _logger.LogWarning("Registration rejected: email {Email} already exists", email);
             throw new InvalidOperationException("Email already exists");
+        }
 
         var passwordHash = BCrypt.HashPassword(password);
         var user = new User
@@ -41,6 +49,8 @@ public class AuthService : IAuthService
 
         _dbContext.Users.Add(user);
         await _dbContext.SaveChangesAsync();
+
+        _logger.LogInformation("User registered: {UserId} ({Username})", user.Id, user.Username);
 
         var token = GenerateJwtToken(user);
         var expiresAt = DateTime.UtcNow.AddHours(GetTokenExpirationHours());
@@ -59,11 +69,19 @@ public class AuthService : IAuthService
         var user = await _dbContext.Users
             .FirstOrDefaultAsync(u => u.Username == usernameOrEmail || u.Email == usernameOrEmail);
 
-        if (user == null)
+        if (user is null)
+        {
+            _logger.LogWarning("Login failed: no account found for {UsernameOrEmail}", usernameOrEmail);
             throw new UnauthorizedAccessException("Invalid username/email or password");
+        }
 
         if (!BCrypt.Verify(password, user.PasswordHash))
+        {
+            _logger.LogWarning("Login failed: wrong password for user {UserId} ({Username})", user.Id, user.Username);
             throw new UnauthorizedAccessException("Invalid username/email or password");
+        }
+
+        _logger.LogInformation("Login succeeded: {UserId} ({Username})", user.Id, user.Username);
 
         var token = GenerateJwtToken(user);
         var expiresAt = DateTime.UtcNow.AddHours(GetTokenExpirationHours());

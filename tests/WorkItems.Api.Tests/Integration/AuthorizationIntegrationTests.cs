@@ -133,6 +133,48 @@ public class AuthorizationIntegrationTests : IClassFixture<WorkItemsWebApplicati
     // ── PUT (update) ──────────────────────────────────────────────────────────
 
     [Fact]
+    public async Task Update_AsMember_ReturnsOk()
+    {
+        var adminClient = _factory.CreateClient();
+        adminClient.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", JwtTestHelper.CreateToken("Admin"));
+        var created = await CreateWorkItemAsync(adminClient);
+
+        var memberClient = _factory.CreateClient();
+        memberClient.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", JwtTestHelper.CreateToken("Member"));
+
+        var response = await memberClient.PutAsJsonAsync($"/api/work-items/{created.Id}",
+            new UpdateWorkItemRequest
+            {
+                Title    = "Updated by Member",
+                Status   = WorkItemStatus.InProgress,
+                Priority = WorkItemPriority.Medium
+            });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Update_AsAdmin_ReturnsOk()
+    {
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", JwtTestHelper.CreateToken("Admin"));
+        var created = await CreateWorkItemAsync(client);
+
+        var response = await client.PutAsJsonAsync($"/api/work-items/{created.Id}",
+            new UpdateWorkItemRequest
+            {
+                Title    = "Updated by Admin",
+                Status   = WorkItemStatus.Done,
+                Priority = WorkItemPriority.High
+            });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Update_AsViewer_ReturnsForbidden()
     {
         // Arrange — create item as Admin

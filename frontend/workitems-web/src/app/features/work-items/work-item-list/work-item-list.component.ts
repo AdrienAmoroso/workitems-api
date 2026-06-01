@@ -16,7 +16,7 @@ import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterLink } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { filter, skip, Subscription } from 'rxjs';
 import {
     PaginatedResult,
     WorkItem,
@@ -409,6 +409,16 @@ export class WorkItemListComponent implements OnInit, OnDestroy {
       this.signalRService.onWorkItemDeleted$.subscribe((id) => {
         this.workItems.update((items) => items.filter((i) => i.id !== id));
         this.totalCount.update((n) => n - 1);
+      }),
+    );
+    // Show a snackbar only when the connection transitions from connected → disconnected.
+    // skip(1) drops the BehaviorSubject's initial false emission (before any connection attempt).
+    this.subscriptions.add(
+      this.signalRService.isConnected$.pipe(
+        skip(1),
+        filter((connected) => !connected),
+      ).subscribe(() => {
+        this.snackBar.open('Live updates paused — reconnecting…', 'Dismiss', { duration: 5000 });
       }),
     );
   }

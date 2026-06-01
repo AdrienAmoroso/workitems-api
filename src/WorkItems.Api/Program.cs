@@ -1,12 +1,15 @@
 using System.Text;
 using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
 using Microsoft.OpenApi;
 using Serilog;
 using Serilog.Formatting.Json;
 using WorkItems.Api.Data;
+using WorkItems.Api.Domain;
 using WorkItems.Api.Middleware;
 using WorkItems.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using WorkItems.Api.Hubs;
@@ -82,7 +85,15 @@ if (!builder.Environment.EnvironmentName.Equals("Test", StringComparison.Ordinal
 }
 
 var jwtSettings = builder.Configuration.GetSection("Jwt");
-var secretKey = jwtSettings["SecretKey"] ?? "TestSecretKeyForJWTThatIsAtLeast32CharactersLong123456";
+var secretKey = jwtSettings["SecretKey"];
+if (string.IsNullOrWhiteSpace(secretKey))
+{
+    // Production must have the secret configured — fail fast rather than run with a known key.
+    // Development/Test use a placeholder; the test factory overrides the signing key via PostConfigure.
+    if (builder.Environment.IsProduction())
+        throw new InvalidOperationException("Jwt:SecretKey is not configured. Set it via environment variable or Azure Key Vault.");
+    secretKey = "dev-test-placeholder-not-for-production-use!!!!";
+}
 
 builder.Services.AddAuthentication(options =>
 {
@@ -122,11 +133,11 @@ builder.Services.AddAuthorization(options =>
 {
     // ADR-01: Authorization via named Policies, not raw role strings.
     // CanManageWorkItems — Members and Admins can create and edit work items.
-    options.AddPolicy("CanManageWorkItems", policy =>
+    options.AddPolicy(AuthorizationPolicies.CanManageWorkItems, policy =>
         policy.RequireRole("Member", "Admin"));
 
     // CanDeleteWorkItems — Admins only can delete work items.
-    options.AddPolicy("CanDeleteWorkItems", policy =>
+    options.AddPolicy(AuthorizationPolicies.CanDeleteWorkItems, policy =>
         policy.RequireRole("Admin"));
 });
 
@@ -203,6 +214,20 @@ builder.Services.AddSwaggerGen(options =>
         options.IncludeXmlComments(xmlPath);
 });
 
+// Rate limiting: fixed-window policy on auth endpoints to prevent brute-force and spam.
+// 10 requests per minute per IP; excess requests get 429 immediately (queue limit 0).
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddFixedWindowLimiter("Auth", limiterOptions =>
+    {
+        limiterOptions.Window            = TimeSpan.FromMinutes(1);
+        limiterOptions.PermitLimit       = 10;
+        limiterOptions.QueueLimit        = 0;
+        limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+    });
+});
+
 // Add CORS for Angular frontend
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() 
     ?? new[] { "http://localhost:4200" };
@@ -223,6 +248,10 @@ var app = builder.Build();
 // ADR-06: Global exception middleware — logs via Serilog, returns ProblemDetails (RFC 7807).
 // Must be first in the pipeline so every downstream exception is caught.
 app.UseMiddleware<GlobalExceptionMiddleware>();
+
+// Pushes HttpContext.TraceIdentifier into the Serilog LogContext as CorrelationId.
+// Also echoes it back to the client as X-Correlation-Id so support teams can cross-reference.
+app.UseMiddleware<CorrelationIdMiddleware>();
 
 // Apply migrations automatically (skip in Test environment)
 if (!app.Environment.EnvironmentName.Equals("Test", StringComparison.OrdinalIgnoreCase))
@@ -270,6 +299,13 @@ if (!app.Environment.EnvironmentName.Equals("Test", StringComparison.OrdinalIgno
 
 // CORS must be first to handle preflight requests
 app.UseCors("AllowAngularApp");
+
+// Rate limiter active in all environments except Test — shared test factory accumulates
+// requests across test methods, which would trip the per-IP window and break unrelated tests.
+if (!app.Environment.EnvironmentName.Equals("Test", StringComparison.OrdinalIgnoreCase))
+{
+    app.UseRateLimiter();
+}
 
 // Enable Swagger in all environments for demo purposes
 app.UseSwagger();
