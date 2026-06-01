@@ -28,7 +28,7 @@ export class SignalRService {
         // Return null (not empty string) when there is no token.
         // An empty string is still sent as a bearer token, causing a 401.
         // Returning null lets SignalR omit the Authorization header entirely.
-        accessTokenFactory: () => this.authService.getToken() ?? null,
+        accessTokenFactory: () => this.authService.getToken() ?? '',
       })
       .withAutomaticReconnect()
       .build();
