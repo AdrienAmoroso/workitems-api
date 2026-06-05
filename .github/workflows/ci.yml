@@ -32,7 +32,7 @@ jobs:
       - name: Run tests
         run: dotnet test --configuration Release --no-build --verbosity normal
 
-  deploy:
+  deploy-api:
     runs-on: ubuntu-latest
     needs: build-and-test
     # Only deploy on push to master, not on pull requests
@@ -47,7 +47,7 @@ jobs:
         with:
           dotnet-version: "10.0.x"
 
-      - name: Publish
+      - name: Publish API
         run: dotnet publish src/WorkItems.Api/WorkItems.Api.csproj --configuration Release --output ./publish
 
       - name: Zip publish output
@@ -55,9 +55,36 @@ jobs:
         # Azure App Service requires *.runtimeconfig.json to be at the root to detect the startup DLL.
         run: cd publish && zip -r ../publish.zip .
 
-      - name: Deploy to Azure App Service
+      - name: Deploy API to Azure App Service
         uses: azure/webapps-deploy@v3
         with:
           app-name: workitems-api
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: ./publish.zip
+
+  deploy-worker:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    # Only deploy on push to master, not on pull requests
+    if: github.event_name == 'push'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to Azure Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.ACR_LOGIN_SERVER }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: Build and push Worker Docker image
+        run: |
+          docker build \
+            --file src/WorkItems.Worker/Dockerfile \
+            --tag ${{ secrets.ACR_LOGIN_SERVER }}/workitems-worker:${{ github.sha }} \
+            --tag ${{ secrets.ACR_LOGIN_SERVER }}/workitems-worker:latest \
+            .
+          docker push ${{ secrets.ACR_LOGIN_SERVER }}/workitems-worker:${{ github.sha }}
+          docker push ${{ secrets.ACR_LOGIN_SERVER }}/workitems-worker:latest

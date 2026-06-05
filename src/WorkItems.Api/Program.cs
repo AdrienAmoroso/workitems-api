@@ -72,6 +72,14 @@ static string ConvertPostgresUrlToConnectionString(string databaseUrl)
 builder.Services.AddScoped<IWorkItemService, WorkItemService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 
+// Event publishing: use Azure Service Bus when the connection string is configured,
+// fall back to a no-op publisher in local dev (logs a warning instead of crashing).
+var serviceBusConnectionString = builder.Configuration["ServiceBus:ConnectionString"];
+if (!string.IsNullOrWhiteSpace(serviceBusConnectionString))
+    builder.Services.AddSingleton<IEventPublisher, ServiceBusEventPublisher>();
+else
+    builder.Services.AddSingleton<IEventPublisher, NullEventPublisher>();
+
 // Application Insights: telemetry (requests, exceptions, dependencies) sent to Azure Monitor.
 // Connection string is injected via APPLICATIONINSIGHTS_CONNECTION_STRING in Azure App Settings.
 // Skipped in Test environment — the background telemetry worker breaks WebApplicationFactory.

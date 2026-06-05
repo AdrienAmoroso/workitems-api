@@ -4,6 +4,7 @@ using WorkItems.Api.Contracts.WorkItems;
 using WorkItems.Api.Data;
 using WorkItems.Api.Domain;
 using WorkItems.Api.Hubs;
+using WorkItems.Contracts;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,22 +12,28 @@ public class WorkItemService : IWorkItemService
 {
     private readonly AppDbContext _dbContext;
     private readonly IHubContext<WorkItemsHub> _hubContext;
+    private readonly IEventPublisher _eventPublisher;
     private readonly ILogger<WorkItemService> _logger;
 
-    public WorkItemService(AppDbContext dbContext, IHubContext<WorkItemsHub> hubContext, ILogger<WorkItemService> logger)
+    public WorkItemService(
+        AppDbContext dbContext,
+        IHubContext<WorkItemsHub> hubContext,
+        IEventPublisher eventPublisher,
+        ILogger<WorkItemService> logger)
     {
         _dbContext = dbContext;
         _hubContext = hubContext;
+        _eventPublisher = eventPublisher;
         _logger = logger;
     }
 
     public async Task<WorkItemResponse> GetByIdAsync(Guid id)
     {
         var workItem = await _dbContext.WorkItems.FirstOrDefaultAsync(x => x.Id == id);
-        
+
         if (workItem is null)
             throw new NotFoundException($"Work item with ID {id} not found.");
-        
+
         return WorkItemResponse.FromEntity(workItem);
     }
 
@@ -45,7 +52,7 @@ public class WorkItemService : IWorkItemService
 
         if (status.HasValue)
             query = query.Where(x => x.Status == status.Value);
-        
+
         if (priority.HasValue)
             query = query.Where(x => x.Priority == priority.Value);
 
@@ -87,16 +94,27 @@ public class WorkItemService : IWorkItemService
         _logger.LogInformation("Work item created: {WorkItemId} — \"{Title}\"", workItem.Id, workItem.Title);
 
         var response = WorkItemResponse.FromEntity(workItem);
-        await _hubContext.Clients.All.SendAsync(WorkItemsHubEvents.WorkItemCreated, response);
+
+        await Task.WhenAll(
+            _hubContext.Clients.All.SendAsync(WorkItemsHubEvents.WorkItemCreated, response),
+            _eventPublisher.PublishAsync(new WorkItemCreatedEvent(
+                workItem.Id,
+                workItem.Title,
+                workItem.Priority.ToString(),
+                workItem.Status.ToString(),
+                DateTimeOffset.UtcNow)));
+
         return response;
     }
 
     public async Task<WorkItemResponse> UpdateAsync(Guid id, UpdateWorkItemRequest request)
     {
         var workItem = await _dbContext.WorkItems.FirstOrDefaultAsync(x => x.Id == id);
-        
+
         if (workItem is null)
             throw new NotFoundException($"Work item with ID {id} not found.");
+
+        var oldStatus = workItem.Status;
 
         workItem.Title = request.Title;
         workItem.Description = request.Description;
@@ -110,23 +128,42 @@ public class WorkItemService : IWorkItemService
         _logger.LogInformation("Work item updated: {WorkItemId} — \"{Title}\"", workItem.Id, workItem.Title);
 
         var response = WorkItemResponse.FromEntity(workItem);
-        await _hubContext.Clients.All.SendAsync(WorkItemsHubEvents.WorkItemUpdated, response);
+
+        await Task.WhenAll(
+            _hubContext.Clients.All.SendAsync(WorkItemsHubEvents.WorkItemUpdated, response),
+            _eventPublisher.PublishAsync(new WorkItemUpdatedEvent(
+                workItem.Id,
+                workItem.Title,
+                oldStatus.ToString(),
+                workItem.Status.ToString(),
+                workItem.Priority.ToString(),
+                DateTimeOffset.UtcNow)));
+
         return response;
     }
 
     public async Task DeleteAsync(Guid id)
     {
         var workItem = await _dbContext.WorkItems.FirstOrDefaultAsync(x => x.Id == id);
-        
+
         if (workItem is null)
             throw new NotFoundException($"Work item with ID {id} not found.");
+
+        // Capture title before removal — entity is detached after SaveChanges.
+        var deletedId = workItem.Id;
+        var deletedTitle = workItem.Title;
 
         _dbContext.WorkItems.Remove(workItem);
         await _dbContext.SaveChangesAsync();
 
-        _logger.LogInformation("Work item deleted: {WorkItemId} — \"{Title}\"", workItem.Id, workItem.Title);
+        _logger.LogInformation("Work item deleted: {WorkItemId} — \"{Title}\"", deletedId, deletedTitle);
 
-        await _hubContext.Clients.All.SendAsync(WorkItemsHubEvents.WorkItemDeleted, id);
+        await Task.WhenAll(
+            _hubContext.Clients.All.SendAsync(WorkItemsHubEvents.WorkItemDeleted, deletedId),
+            _eventPublisher.PublishAsync(new WorkItemDeletedEvent(
+                deletedId,
+                deletedTitle,
+                DateTimeOffset.UtcNow)));
     }
 
     private static IQueryable<WorkItem> ApplySorting(

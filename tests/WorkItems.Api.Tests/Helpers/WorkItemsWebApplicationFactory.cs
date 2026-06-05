@@ -2,6 +2,7 @@ namespace WorkItems.Api.Tests.Helpers;
 
 using System.Text;
 using WorkItems.Api.Data;
+using WorkItems.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -39,6 +40,11 @@ public class WorkItemsWebApplicationFactory : WebApplicationFactory<Program>
             // Replace the real DbContext with an isolated in-memory instance per factory
             services.AddDbContext<AppDbContext>(options =>
                 options.UseInMemoryDatabase(_databaseName));
+
+            // Replace the real event publisher with a spy so tests can assert published events
+            // without requiring a real Azure Service Bus connection.
+            services.AddSingleton<SpyEventPublisher>();
+            services.AddSingleton<IEventPublisher>(sp => sp.GetRequiredService<SpyEventPublisher>());
 
             // Override JWT validation to use the test key
             services.PostConfigure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>

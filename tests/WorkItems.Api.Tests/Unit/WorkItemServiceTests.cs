@@ -5,6 +5,7 @@ using WorkItems.Api.Data;
 using WorkItems.Api.Domain;
 using WorkItems.Api.Hubs;
 using WorkItems.Api.Services;
+using WorkItems.Contracts;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -24,6 +25,9 @@ public class WorkItemServiceTests
     private static ILogger<WorkItemService> CreateMockLogger() =>
         new Mock<ILogger<WorkItemService>>().Object;
 
+    private static IEventPublisher CreateMockPublisher() =>
+        new Mock<IEventPublisher>().Object;
+
     private static IHubContext<WorkItemsHub> CreateMockHubContext()
     {
         var mockClients = new Mock<IHubClients>();
@@ -42,7 +46,7 @@ public class WorkItemServiceTests
     {
         // Arrange
         using var context = CreateInMemoryDbContext();
-        var service = new WorkItemService(context, CreateMockHubContext(), CreateMockLogger());
+        var service = new WorkItemService(context, CreateMockHubContext(), CreateMockPublisher(), CreateMockLogger());
 
         var workItem = new WorkItem
         {
@@ -75,7 +79,7 @@ public class WorkItemServiceTests
     {
         // Arrange
         using var context = CreateInMemoryDbContext();
-        var service = new WorkItemService(context, CreateMockHubContext(), CreateMockLogger());
+        var service = new WorkItemService(context, CreateMockHubContext(), CreateMockPublisher(), CreateMockLogger());
         var nonExistingId = Guid.NewGuid();
 
         // Act & Assert
@@ -87,7 +91,7 @@ public class WorkItemServiceTests
     {
         // Arrange
         using var context = CreateInMemoryDbContext();
-        var service = new WorkItemService(context, CreateMockHubContext(), CreateMockLogger());
+        var service = new WorkItemService(context, CreateMockHubContext(), CreateMockPublisher(), CreateMockLogger());
 
         var workItems = new[]
         {
@@ -113,7 +117,7 @@ public class WorkItemServiceTests
     {
         // Arrange
         using var context = CreateInMemoryDbContext();
-        var service = new WorkItemService(context, CreateMockHubContext(), CreateMockLogger());
+        var service = new WorkItemService(context, CreateMockHubContext(), CreateMockPublisher(), CreateMockLogger());
 
         var workItems = new[]
         {
@@ -139,7 +143,7 @@ public class WorkItemServiceTests
     {
         // Arrange
         using var context = CreateInMemoryDbContext();
-        var service = new WorkItemService(context, CreateMockHubContext(), CreateMockLogger());
+        var service = new WorkItemService(context, CreateMockHubContext(), CreateMockPublisher(), CreateMockLogger());
 
         var workItems = new[]
         {
@@ -165,7 +169,7 @@ public class WorkItemServiceTests
     {
         // Arrange
         using var context = CreateInMemoryDbContext();
-        var service = new WorkItemService(context, CreateMockHubContext(), CreateMockLogger());
+        var service = new WorkItemService(context, CreateMockHubContext(), CreateMockPublisher(), CreateMockLogger());
 
         for (int i = 1; i <= 15; i++)
         {
@@ -201,7 +205,7 @@ public class WorkItemServiceTests
     {
         // Arrange
         using var context = CreateInMemoryDbContext();
-        var service = new WorkItemService(context, CreateMockHubContext(), CreateMockLogger());
+        var service = new WorkItemService(context, CreateMockHubContext(), CreateMockPublisher(), CreateMockLogger());
 
         var request = new CreateWorkItemRequest
         {
@@ -230,7 +234,7 @@ public class WorkItemServiceTests
     {
         // Arrange
         using var context = CreateInMemoryDbContext();
-        var service = new WorkItemService(context, CreateMockHubContext(), CreateMockLogger());
+        var service = new WorkItemService(context, CreateMockHubContext(), CreateMockPublisher(), CreateMockLogger());
 
         var workItem = new WorkItem
         {
@@ -274,7 +278,7 @@ public class WorkItemServiceTests
     {
         // Arrange
         using var context = CreateInMemoryDbContext();
-        var service = new WorkItemService(context, CreateMockHubContext(), CreateMockLogger());
+        var service = new WorkItemService(context, CreateMockHubContext(), CreateMockPublisher(), CreateMockLogger());
         var nonExistingId = Guid.NewGuid();
 
         var updateRequest = new UpdateWorkItemRequest
@@ -294,7 +298,7 @@ public class WorkItemServiceTests
     {
         // Arrange
         using var context = CreateInMemoryDbContext();
-        var service = new WorkItemService(context, CreateMockHubContext(), CreateMockLogger());
+        var service = new WorkItemService(context, CreateMockHubContext(), CreateMockPublisher(), CreateMockLogger());
 
         var workItem = new WorkItem
         {
@@ -322,7 +326,7 @@ public class WorkItemServiceTests
     {
         // Arrange
         using var context = CreateInMemoryDbContext();
-        var service = new WorkItemService(context, CreateMockHubContext(), CreateMockLogger());
+        var service = new WorkItemService(context, CreateMockHubContext(), CreateMockPublisher(), CreateMockLogger());
         var nonExistingId = Guid.NewGuid();
 
         // Act & Assert
@@ -334,7 +338,7 @@ public class WorkItemServiceTests
     {
         // Arrange
         using var context = CreateInMemoryDbContext();
-        var service = new WorkItemService(context, CreateMockHubContext(), CreateMockLogger());
+        var service = new WorkItemService(context, CreateMockHubContext(), CreateMockPublisher(), CreateMockLogger());
 
         var workItems = new[]
         {

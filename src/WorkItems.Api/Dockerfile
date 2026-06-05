@@ -1,33 +1,29 @@
-# Build stage
+# Build context must be the repository root so the shared Contracts project is reachable.
+# docker-compose sets context: . (repo root) and dockerfile: src/WorkItems.Api/Dockerfile.
+
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-# Copy csproj and restore dependencies
-COPY ["WorkItems.Api.csproj", "./"]
-RUN dotnet restore
+# Copy project files first so layer-cached restore is only invalidated when deps change.
+COPY ["src/WorkItems.Contracts/WorkItems.Contracts.csproj", "src/WorkItems.Contracts/"]
+COPY ["src/WorkItems.Api/WorkItems.Api.csproj",             "src/WorkItems.Api/"]
+RUN dotnet restore "src/WorkItems.Api/WorkItems.Api.csproj"
 
-# Copy everything else and build
 COPY . .
-RUN dotnet publish -c Release -o /app/publish
+RUN dotnet publish "src/WorkItems.Api/WorkItems.Api.csproj" -c Release -o /app/publish --no-restore
 
-# Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
-# Install Kerberos library required by PostgreSQL
+# Required by Npgsql (PostgreSQL .NET driver) on Debian-based images.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgssapi-krb5-2 \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy published app
 COPY --from=build /app/publish .
 
-# Expose port
 EXPOSE 8080
-
-# Set environment variables
 ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Production
 
-# Run the app
 ENTRYPOINT ["dotnet", "WorkItems.Api.dll"]

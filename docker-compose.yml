@@ -1,0 +1,41 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: src/WorkItems.Api/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Data Source=/data/app.db"
+      Jwt__SecretKey: ${JWT_SECRET_KEY}
+      Jwt__Issuer: WorkItemsApi
+      Jwt__Audience: WorkItemsApiUsers
+      Jwt__ExpirationHours: "24"
+      Cors__AllowedOrigins__0: "http://localhost:4200"
+      ServiceBus__ConnectionString: ${SERVICEBUS_CONNECTION_STRING}
+      ServiceBus__TopicName: workitems-events
+    volumes:
+      - api-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  worker:
+    build:
+      context: .
+      dockerfile: src/WorkItems.Worker/Dockerfile
+    environment:
+      ServiceBus__ConnectionString: ${SERVICEBUS_CONNECTION_STRING}
+      ServiceBus__TopicName: workitems-events
+      ServiceBus__SubscriptionName: workitems-worker-sub
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: on-failure
+
+volumes:
+  api-data:
