@@ -37,7 +37,6 @@ if (!builder.Environment.EnvironmentName.Equals("Test", StringComparison.Ordinal
     }
     else
     {
-        // Use SQLite in development
         builder.Services.AddDbContext<AppDbContext>(options =>
             options.UseSqlite(connectionString));
     }
@@ -114,11 +113,9 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization(options =>
 {
     // ADR-01: Authorization via named Policies, not raw role strings.
-    // CanManageWorkItems — Members and Admins can create and edit work items.
     options.AddPolicy(AuthorizationPolicies.CanManageWorkItems, policy =>
         policy.RequireRole("Member", "Admin"));
 
-    // CanDeleteWorkItems — Admins only can delete work items.
     options.AddPolicy(AuthorizationPolicies.CanDeleteWorkItems, policy =>
         policy.RequireRole("Admin"));
 });
@@ -210,8 +207,9 @@ builder.Services.AddRateLimiter(options =>
     });
 });
 
-// Add CORS for Angular frontend
-var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() 
+// AllowCredentials is required for SignalR WebSocket connections.
+// Origins are read from config so the same build runs in development and production.
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
     ?? new[] { "http://localhost:4200" };
 
 builder.Services.AddCors(options =>
@@ -264,7 +262,6 @@ if (!app.Environment.EnvironmentName.Equals("Test", StringComparison.OrdinalIgno
     }
     else
     {
-        // For SQLite in development: use migrations
         dbContext.Database.Migrate();
     }
 

@@ -20,6 +20,12 @@ public class WorkItemsWebApplicationFactory : WebApplicationFactory<Program>
 {
     private readonly string _databaseName = "TestDatabase_" + Guid.NewGuid();
 
+    /// <summary>
+    /// Configures the test host: isolates each factory instance in its own in-memory
+    /// database, replaces <see cref="IEventPublisher"/> with a <c>SpyEventPublisher</c>
+    /// so tests can assert published events, and wires a known JWT signing key so tests
+    /// can generate valid tokens without touching real secrets.
+    /// </summary>
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Test");

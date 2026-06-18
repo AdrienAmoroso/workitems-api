@@ -1,8 +1,9 @@
 namespace WorkItems.Contracts;
 
 /// <summary>
-/// Published to Service Bus when a work item is created.
-/// Consumed by WorkItems.Worker to write a structured audit log entry.
+/// Domain event raised when a new work item is persisted.
+/// Crosses the Service Bus boundary as a JSON message; all subscribers receive it
+/// via their own subscription — the producer has no knowledge of downstream handlers.
 /// </summary>
 public record WorkItemCreatedEvent(
     Guid WorkItemId,

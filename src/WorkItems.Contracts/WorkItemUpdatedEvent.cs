@@ -1,8 +1,9 @@
 namespace WorkItems.Contracts;
 
 /// <summary>
-/// Published to Service Bus when a work item is updated.
-/// Includes the status transition (OldStatus → NewStatus) for audit trail purposes.
+/// Domain event raised when a work item is modified.
+/// Carries both <see cref="OldStatus"/> and <see cref="NewStatus"/> so consumers
+/// can react to status transitions without querying the database.
 /// </summary>
 public record WorkItemUpdatedEvent(
     Guid WorkItemId,

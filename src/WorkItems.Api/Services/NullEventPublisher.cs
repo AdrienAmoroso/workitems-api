@@ -10,6 +10,10 @@ public sealed class NullEventPublisher : IEventPublisher
 
     public NullEventPublisher(ILogger<NullEventPublisher> logger) => _logger = logger;
 
+    /// <summary>
+    /// Discards the event and emits a warning — makes the missing broker configuration
+    /// visible in dev logs without causing a startup crash or changing API behaviour.
+    /// </summary>
     public Task PublishAsync<T>(T @event, CancellationToken cancellationToken = default) where T : class
     {
         _logger.LogWarning(

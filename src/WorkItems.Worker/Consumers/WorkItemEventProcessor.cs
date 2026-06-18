@@ -24,6 +24,13 @@ public class WorkItemEventProcessor : BackgroundService
         _logger           = logger;
     }
 
+    /// <summary>
+    /// Opens a <see cref="ServiceBusProcessor"/> and blocks until the host signals cancellation.
+    /// <c>AutoCompleteMessages = false</c> means the message is only settled after
+    /// <see cref="DispatchAsync"/> returns successfully — a processing fault leaves the
+    /// message on the topic for retry or eventual dead-lettering.
+    /// <c>MaxConcurrentCalls = 1</c> keeps event ordering deterministic per subscription.
+    /// </summary>
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         await using var client = new ServiceBusClient(_connectionString);

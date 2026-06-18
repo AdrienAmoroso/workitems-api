@@ -19,6 +19,11 @@ public sealed class ServiceBusEventPublisher : IEventPublisher, IAsyncDisposable
         _sender = _client.CreateSender(topicName);
     }
 
+    /// <summary>
+    /// Serialises the event to JSON and sends it to the configured Service Bus topic.
+    /// Sets <c>Subject</c> to the CLR type name so the consumer can route by message header
+    /// without deserialising the payload first.
+    /// </summary>
     public async Task PublishAsync<T>(T @event, CancellationToken cancellationToken = default) where T : class
     {
         var message = new ServiceBusMessage(BinaryData.FromObjectAsJson(@event))
@@ -29,6 +34,10 @@ public sealed class ServiceBusEventPublisher : IEventPublisher, IAsyncDisposable
         await _sender.SendMessageAsync(message, cancellationToken);
     }
 
+    /// <summary>
+    /// Disposes the sender before the client — the sender holds an AMQP link that must
+    /// be closed before tearing down the underlying connection.
+    /// </summary>
     public async ValueTask DisposeAsync()
     {
         await _sender.DisposeAsync();

@@ -10,6 +10,10 @@ namespace WorkItems.Api.Middleware;
 /// </summary>
 public class GlobalExceptionMiddleware(RequestDelegate next, ILogger<GlobalExceptionMiddleware> logger)
 {
+    /// <summary>
+    /// Invokes the next middleware and intercepts any unhandled exception.
+    /// <see cref="NotFoundException"/> maps to 404; all other faults map to 500.
+    /// </summary>
     public async Task InvokeAsync(HttpContext context)
     {
         try

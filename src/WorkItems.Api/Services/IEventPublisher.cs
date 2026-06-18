@@ -6,5 +6,10 @@ namespace WorkItems.Api.Services;
 /// </summary>
 public interface IEventPublisher
 {
+    /// <summary>
+    /// Publishes a typed domain event to the configured message broker.
+    /// Callers are not aware of the underlying transport — Service Bus in production,
+    /// no-op locally (see <see cref="NullEventPublisher"/>).
+    /// </summary>
     Task PublishAsync<T>(T @event, CancellationToken cancellationToken = default) where T : class;
 }

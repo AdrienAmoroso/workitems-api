@@ -8,6 +8,12 @@ using WorkItems.Contracts;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
+/// <summary>
+/// Orchestrates all work item CRUD operations, enforcing domain rules and coordinating
+/// three concerns after each mutation: persistence (EF Core), real-time push (SignalR),
+/// and async event publication (Service Bus via <see cref="IEventPublisher"/>).
+/// Business logic lives here per ADR-02; controllers are intentionally thin.
+/// </summary>
 public class WorkItemService : IWorkItemService
 {
     private readonly AppDbContext _dbContext;
@@ -27,6 +33,13 @@ public class WorkItemService : IWorkItemService
         _logger = logger;
     }
 
+    /// <summary>
+    /// Returns a single work item by its unique identifier.
+    /// </summary>
+    /// <exception cref="NotFoundException">
+    /// Thrown when no work item with the given <paramref name="id"/> exists;
+    /// caught by <c>GlobalExceptionMiddleware</c> and translated to HTTP 404.
+    /// </exception>
     public async Task<WorkItemResponse> GetByIdAsync(Guid id)
     {
         var workItem = await _dbContext.WorkItems.FirstOrDefaultAsync(x => x.Id == id);
@@ -37,6 +50,17 @@ public class WorkItemService : IWorkItemService
         return WorkItemResponse.FromEntity(workItem);
     }
 
+    /// <summary>
+    /// Returns a paginated, optionally filtered and sorted slice of work items.
+    /// Filters are combined with AND semantics; all filter parameters are optional.
+    /// </summary>
+    /// <remarks>
+    /// Page and page size are clamped to safe bounds (minimum 1, maximum 100 items per page)
+    /// to prevent unbounded queries regardless of what the client sends.
+    /// The total count is computed before sorting and pagination so the caller can
+    /// calculate total pages without a second round-trip.
+    /// Default sort is <c>createdAt desc</c> — newest first, consistent with the UI default.
+    /// </remarks>
     public async Task<PaginatedResult<WorkItemResponse>> GetAllAsync(
         int page = 1,
         int pageSize = 10,
@@ -76,6 +100,18 @@ public class WorkItemService : IWorkItemService
         };
     }
 
+    /// <summary>
+    /// Persists a new work item and notifies all connected clients and downstream subscribers.
+    /// </summary>
+    /// <remarks>
+    /// Status is always initialised to <see cref="WorkItemStatus.Todo"/> — the API does not
+    /// accept an initial status from the caller; progression is an explicit update.
+    /// <para>
+    /// <see cref="Task.WhenAll"/> fires the SignalR broadcast and the Service Bus event
+    /// concurrently after the database commit. The two side effects are independent,
+    /// so parallelising them reduces end-to-end latency without introducing ordering risk.
+    /// </para>
+    /// </remarks>
     public async Task<WorkItemResponse> CreateAsync(CreateWorkItemRequest request)
     {
         var workItem = new WorkItem
@@ -107,6 +143,17 @@ public class WorkItemService : IWorkItemService
         return response;
     }
 
+    /// <summary>
+    /// Applies the requested mutations to an existing work item and notifies subscribers.
+    /// </summary>
+    /// <remarks>
+    /// The previous status is captured before the entity is mutated because the event payload
+    /// carries both the old and new status — downstream consumers need the delta to decide
+    /// whether to act (e.g. trigger a notification only on status transitions to <c>Done</c>).
+    /// </remarks>
+    /// <exception cref="NotFoundException">
+    /// Thrown when no work item with the given <paramref name="id"/> exists.
+    /// </exception>
     public async Task<WorkItemResponse> UpdateAsync(Guid id, UpdateWorkItemRequest request)
     {
         var workItem = await _dbContext.WorkItems.FirstOrDefaultAsync(x => x.Id == id);
@@ -142,6 +189,12 @@ public class WorkItemService : IWorkItemService
         return response;
     }
 
+    /// <summary>
+    /// Removes a work item permanently and notifies all connected clients and downstream subscribers.
+    /// </summary>
+    /// <exception cref="NotFoundException">
+    /// Thrown when no work item with the given <paramref name="id"/> exists.
+    /// </exception>
     public async Task DeleteAsync(Guid id)
     {
         var workItem = await _dbContext.WorkItems.FirstOrDefaultAsync(x => x.Id == id);
@@ -149,7 +202,8 @@ public class WorkItemService : IWorkItemService
         if (workItem is null)
             throw new NotFoundException($"Work item with ID {id} not found.");
 
-        // Capture title before removal — entity is detached after SaveChanges.
+        // Capture title and id before removal — the entity is detached from the change tracker
+        // after SaveChanges, so these values are no longer accessible for logging or the event payload.
         var deletedId = workItem.Id;
         var deletedTitle = workItem.Title;
 
@@ -166,6 +220,11 @@ public class WorkItemService : IWorkItemService
                 DateTimeOffset.UtcNow)));
     }
 
+    /// <summary>
+    /// Applies a sort order to the query based on the caller-supplied field and direction.
+    /// Falls back to <c>createdAt desc</c> for any unrecognised <paramref name="sortBy"/> value,
+    /// guaranteeing a stable, deterministic order regardless of client input.
+    /// </summary>
     private static IQueryable<WorkItem> ApplySorting(
         IQueryable<WorkItem> query,
         string sortBy,
