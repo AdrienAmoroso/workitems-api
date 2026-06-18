@@ -38,10 +38,21 @@ public static class DatabaseSeeder
         string password,
         UserRole role)
     {
-        var exists = await dbContext.Users.AnyAsync(u => u.Email == email);
-        if (exists) return;
+        var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Email == email);
 
-        var user = new User
+        if (user is not null)
+        {
+            // Correct the role if the account exists with the wrong one — guards against stale
+            // data from earlier deploys where the default UserRole.Member was persisted.
+            if (user.Role != role)
+            {
+                user.Role = role;
+                await dbContext.SaveChangesAsync();
+            }
+            return;
+        }
+
+        dbContext.Users.Add(new User
         {
             Username = username,
             Email = email,
@@ -49,9 +60,8 @@ public static class DatabaseSeeder
             Role = role,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
-        };
+        });
 
-        dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
     }
 }
