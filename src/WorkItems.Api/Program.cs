@@ -30,20 +30,9 @@ if (!builder.Environment.EnvironmentName.Equals("Test", StringComparison.Ordinal
 
     if (builder.Environment.IsProduction())
     {
-        // Use PostgreSQL in production.
-        // Render provides DATABASE_URL in URI format; Azure provides the connection string directly.
-        string npgsqlConnectionString;
-        var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
-        if (!string.IsNullOrEmpty(databaseUrl))
-        {
-            npgsqlConnectionString = ConvertPostgresUrlToConnectionString(databaseUrl);
-        }
-        else
-        {
-            npgsqlConnectionString = connectionString!;
-        }
+        // Use PostgreSQL in production — connection string injected via Azure App Service Application Settings.
         builder.Services.AddDbContext<AppDbContext>(options =>
-            options.UseNpgsql(npgsqlConnectionString)
+            options.UseNpgsql(connectionString!)
                    .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)));
     }
     else
@@ -52,21 +41,6 @@ if (!builder.Environment.EnvironmentName.Equals("Test", StringComparison.Ordinal
         builder.Services.AddDbContext<AppDbContext>(options =>
             options.UseSqlite(connectionString));
     }
-}
-
-// Helper function to convert Render's DATABASE_URL to Npgsql connection string
-static string ConvertPostgresUrlToConnectionString(string databaseUrl)
-{
-    var uri = new Uri(databaseUrl);
-    var userInfo = uri.UserInfo.Split(':');
-    var username = userInfo[0];
-    var password = userInfo.Length > 1 ? userInfo[1] : "";
-    var host = uri.Host;
-    var port = uri.Port > 0 ? uri.Port : 5432;
-    var database = uri.AbsolutePath.TrimStart('/');
-    
-    // Add connection pooling and timeout settings for Render free tier
-    return $"Host={host};Port={port};Database={database};Username={username};Password={password};SSL Mode=Require;Trust Server Certificate=true;Pooling=true;Minimum Pool Size=0;Maximum Pool Size=20;Connection Idle Lifetime=300;Connection Pruning Interval=10;Timeout=30;Command Timeout=30";
 }
 
 builder.Services.AddScoped<IWorkItemService, WorkItemService>();
